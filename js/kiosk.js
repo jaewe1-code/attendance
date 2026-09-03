@@ -97,8 +97,8 @@ const KioskManager = {
   // 출석/퇴실 확인 팝업
   showCheckPrompt(student) {
     const today = window.getTodayString();
-    const att = window.store.getTodayAttendanceForStudent(student.id, today);
     const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
+    const isFinished = att && att.checkIn && att.checkOut && att.status !== 'absent';
 
     const modal = document.getElementById('kioskConfirmModal');
     if (!modal) return;
@@ -108,21 +108,35 @@ const KioskManager = {
 
     const actionContainer = document.getElementById('kioskActionButtons');
     if (!isStudying) {
+      const nextSession = isFinished ? (att.sessions?.length || 1) + 1 : 1;
+      const btnText = isFinished ? `${nextSession}차 [다시 입실 (등원)] 하기` : '지금 [입실 (등원)] 하기';
+      const prevInfo = isFinished ? `
+        <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:0.82rem; color:var(--text-muted);">
+          ℹ️ 오늘 이전 수업: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> 학습 완료
+        </div>
+      ` : '';
+
       actionContainer.innerHTML = `
+        ${prevInfo}
         <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
-          <i data-lucide="log-in"></i> 지금 [입실 (등원)] 하기
+          <i data-lucide="log-in"></i> ${btnText}
         </button>
       `;
     } else {
       const nowTime = window.getCurrentTimeString();
       const mins = window.calculateDurationMinutes(att.checkIn, nowTime);
+      const sNum = att.sessions?.length || 1;
+      const sText = sNum > 1 ? `${sNum}차 ` : '';
+      const totalAccum = (att.durationMinutes || 0) + mins;
+
       actionContainer.innerHTML = `
         <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.88rem;">
-          등원시간: <strong>${att.checkIn}</strong><br>
-          현재까지 학습: <strong style="color:var(--primary);">${window.formatMinutesToKorean(mins)}</strong>
+          ${sText}등원시간: <strong>${att.checkIn}</strong><br>
+          현재 세션 학습: <strong style="color:var(--primary);">${window.formatMinutesToKorean(mins)}</strong>
+          ${sNum > 1 ? `<br>오늘 총 누적 예상: <strong>${window.formatMinutesToKorean(totalAccum)}</strong>` : ''}
         </div>
         <button class="btn btn-danger btn-lg btn-full" onclick="KioskManager.executeCheckOut('${student.id}')">
-          <i data-lucide="log-out"></i> 공부 마치고 [퇴실 (하원)] 하기
+          <i data-lucide="log-out"></i> ${sText}공부 마치고 [퇴실 (하원)] 하기
         </button>
       `;
     }
@@ -168,6 +182,9 @@ const KioskManager = {
     if (window.AttendanceManager) {
       window.AttendanceManager.render();
     }
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
   },
 
   executeCheckOut(studentId) {
@@ -182,6 +199,9 @@ const KioskManager = {
 
     if (window.AttendanceManager) {
       window.AttendanceManager.render();
+    }
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
     }
   },
 

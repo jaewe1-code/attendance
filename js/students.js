@@ -86,10 +86,11 @@ const StudentsManager = {
       const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
       const initial = std.name ? std.name.slice(0, 1) : '?';
       
-      // 누적 학습 시간 계산
+        // 누적 학습 시간 계산
       const allAtts = window.store.attendances.filter(a => a.studentId === std.id);
       const totalMinutes = allAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
       const attendanceDays = allAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
+      const schSummary = DataStore.formatScheduleText(std.schedules);
 
       html += `
         <div class="student-card">
@@ -104,6 +105,13 @@ const StudentsManager = {
                 <div class="sub-info">
                   <span>📱 ${std.parentPhone ? '학부모: ' + std.parentPhone : (std.phone || '연락처 없음')}</span>
                 </div>
+                ${schSummary ? `
+                  <div style="margin-top: 4px;">
+                    <span class="badge" style="background:#eef2ff; color:var(--primary); font-size:0.75rem; padding: 2px 8px; border-radius: var(--radius-full);">
+                      🕒 ${schSummary}
+                    </span>
+                  </div>
+                ` : ''}
               </div>
             </div>
             <button class="btn btn-ghost btn-icon btn-sm" onclick="StudentsManager.openEditModal('${std.id}')" title="수정">
@@ -120,8 +128,11 @@ const StudentsManager = {
           </div>
 
           <div style="display: flex; gap: 8px;">
-            <button class="btn btn-outline btn-sm btn-full" onclick="StudentsManager.openEditModal('${std.id}')">
-              <i data-lucide="edit-3"></i> 정보 수정
+            <button class="btn btn-primary btn-sm btn-full" onclick="StudentsManager.openIndividualAttendance('${std.id}')" style="background: #4f46e5;">
+              <i data-lucide="calendar-days"></i> 개인출석부·시간표
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="StudentsManager.openEditModal('${std.id}')">
+              <i data-lucide="edit-3"></i> 수정
             </button>
             <button class="btn btn-danger btn-sm" onclick="StudentsManager.deleteStudent('${std.id}', '${std.name}')">
               <i data-lucide="trash-2"></i> 삭제
@@ -133,6 +144,16 @@ const StudentsManager = {
 
     container.innerHTML = html;
     if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 특정 학생의 개인출석부 탭으로 바로 이동
+  openIndividualAttendance(studentId) {
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.selectStudent(studentId);
+    }
+    if (window.App) {
+      window.App.switchTab('individual');
+    }
   },
 
   // 학생 등록 모달 열기
@@ -213,6 +234,9 @@ const StudentsManager = {
     if (window.AttendanceManager) {
       window.AttendanceManager.render();
     }
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
   },
 
   // 학생 삭제
@@ -224,8 +248,13 @@ const StudentsManager = {
       if (window.AttendanceManager) {
         window.AttendanceManager.render();
       }
+      if (window.IndividualAttendanceManager) {
+        window.IndividualAttendanceManager.setDefaultStudent();
+        window.IndividualAttendanceManager.render();
+      }
     }
   }
 };
 
 window.StudentsManager = StudentsManager;
+

@@ -68,6 +68,14 @@ class DataStore {
     if (savedStudents) {
       try {
         this.students = JSON.parse(savedStudents);
+        // 혹시 과거에 동일한 id로 저장된 학생이 있다면 고유 ID 부여
+        const seenIds = new Set();
+        this.students.forEach((s, i) => {
+          if (!s.id || seenIds.has(s.id)) {
+            s.id = 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
+          }
+          seenIds.add(s.id);
+        });
       } catch (e) {
         this.students = [];
       }
@@ -175,18 +183,35 @@ class DataStore {
     });
   }
 
+  // 특정 요일(월~일) 한글명 가져오기 (YYYY-MM-DD)
+  static getDayName(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr + 'T00:00:00');
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()];
+  }
+
+  // 스케줄 배열을 사람이 읽기 편한 문자열로 변환 (예: "월 14:00, 화 16:00")
+  static formatScheduleText(schedules) {
+    if (!schedules || !Array.isArray(schedules) || schedules.length === 0) return '';
+    const dayOrder = { '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6, '일': 7 };
+    const sorted = [...schedules].sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+    return sorted.map(s => `${s.day} ${s.time || ''}`).join(', ');
+  }
+
   addStudent(studentData) {
     const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
     const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');
     
     const newStudent = {
-      id: 'std-' + Date.now(),
+      id: 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
       name: studentData.name.trim(),
       level: studentData.level || '초등',
       grade: studentData.grade || '',
       phone: studentData.phone || '',
       parentPhone: studentData.parentPhone || '',
       phoneLast4: phoneLast4,
+      schedules: Array.isArray(studentData.schedules) ? studentData.schedules : [],
       weeklyTargetHours: Number(studentData.weeklyTargetHours) || 10,
       memo: studentData.memo || '',
       createdAt: getTodayString()
@@ -205,10 +230,22 @@ class DataStore {
       this.students[index] = {
         ...this.students[index],
         ...studentData,
-        phoneLast4: phoneLast4
+        phoneLast4: phoneLast4,
+        schedules: studentData.schedules !== undefined ? studentData.schedules : (this.students[index].schedules || [])
       };
       this.saveStudents();
       return this.students[index];
+    }
+    return null;
+  }
+
+  // 특정 학생의 스케줄만 전용 업데이트
+  updateStudentSchedules(id, schedules) {
+    const student = this.getStudentById(id);
+    if (student) {
+      student.schedules = Array.isArray(schedules) ? schedules : [];
+      this.saveStudents();
+      return student;
     }
     return null;
   }
@@ -228,18 +265,40 @@ class DataStore {
     return this.attendances.find(a => a.studentId === studentId && a.date === dateStr);
   }
 
-  // 입실 (Check-in)
+  // 입실 (Check-in) - 다회차 입퇴실 완벽 지원
   checkInStudent(studentId, customTime = null, dateStr = getTodayString()) {
     const time = customTime || getCurrentTimeString();
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
 
     if (att) {
-      // 이미 오늘 기록이 있으면 입실 시간 갱신 또는 상태 갱신
-      att.checkIn = time;
-      att.status = 'present';
-      if (att.checkOut) {
-        att.durationMinutes = calculateDurationMinutes(att.checkIn, att.checkOut);
+      if (!Array.isArray(att.sessions)) {
+        att.sessions = [];
+        if (att.checkIn) {
+          att.sessions.push({
+            in: att.checkIn,
+            out: att.checkOut || null,
+            duration: att.durationMinutes || 0
+          });
+        }
       }
+
+      // 현재 아직 퇴실하지 않은 열린 세션이 있는지 확인
+      const openSession = att.sessions.find(s => !s.out);
+      if (openSession) {
+        // 이미 입실 중이면 입실 시간 갱신
+        openSession.in = time;
+        att.checkIn = time;
+      } else {
+        // 이미 하원 완료된 상태에서 다시 입실하는 경우 (하루 2회차 이상 수업)
+        att.sessions.push({
+          in: time,
+          out: null,
+          duration: 0
+        });
+        att.checkIn = time;
+        att.checkOut = null; // 재실 중 상태로 전환!
+      }
+      att.status = 'present';
     } else {
       att = {
         id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
@@ -247,6 +306,9 @@ class DataStore {
         date: dateStr,
         checkIn: time,
         checkOut: null,
+        sessions: [
+          { in: time, out: null, duration: 0 }
+        ],
         status: 'present',
         durationMinutes: 0,
         memo: ''
@@ -257,16 +319,40 @@ class DataStore {
     return att;
   }
 
-  // 퇴실 (Check-out)
+  // 퇴실 (Check-out) - 다회차 세션 총 누적 시간 자동 계산
   checkOutStudent(studentId, customTime = null, dateStr = getTodayString()) {
     const time = customTime || getCurrentTimeString();
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
 
     if (att) {
-      att.checkOut = time;
-      if (att.checkIn) {
-        att.durationMinutes = calculateDurationMinutes(att.checkIn, att.checkOut);
+      if (!Array.isArray(att.sessions)) {
+        att.sessions = [];
+        if (att.checkIn) {
+          att.sessions.push({
+            in: att.checkIn,
+            out: att.checkOut || null,
+            duration: att.durationMinutes || 0
+          });
+        }
       }
+
+      // 열려 있는 세션 닫기
+      const openSession = att.sessions.find(s => !s.out);
+      if (openSession) {
+        openSession.out = time;
+        openSession.duration = calculateDurationMinutes(openSession.in, time);
+      } else if (att.sessions.length > 0) {
+        // 열린 세션이 없으면 마지막 세션 퇴실 시간 갱신
+        const lastSession = att.sessions[att.sessions.length - 1];
+        lastSession.out = time;
+        lastSession.duration = calculateDurationMinutes(lastSession.in, time);
+      } else {
+        att.sessions.push({ in: att.checkIn || time, out: time, duration: 0 });
+      }
+
+      att.checkOut = time;
+      // 전체 세션 누적 시간 합산
+      att.durationMinutes = att.sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
       this.saveAttendances();
       return att;
     } else {
@@ -275,8 +361,11 @@ class DataStore {
         id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
         studentId: studentId,
         date: dateStr,
-        checkIn: '00:00',
+        checkIn: time,
         checkOut: time,
+        sessions: [
+          { in: time, out: time, duration: 0 }
+        ],
         status: 'present',
         durationMinutes: 0,
         memo: '입실 미체크'
@@ -285,6 +374,12 @@ class DataStore {
       this.saveAttendances();
       return att;
     }
+  }
+
+  // 특정 학생의 특정 날짜 출결 완전 초기화(삭제)
+  clearAttendance(studentId, dateStr = getTodayString()) {
+    this.attendances = this.attendances.filter(a => !(a.studentId === studentId && a.date === dateStr));
+    this.saveAttendances();
   }
 
   // 출결 수동 변경 (시간, 상태, 메모 수정)
@@ -368,8 +463,10 @@ class DataStore {
 }
 
 // 전역 싱글톤 인스턴스 생성
+window.DataStore = DataStore;
 window.store = new DataStore();
 window.getTodayString = getTodayString;
 window.getCurrentTimeString = getCurrentTimeString;
 window.calculateDurationMinutes = calculateDurationMinutes;
 window.formatMinutesToKorean = formatMinutesToKorean;
+

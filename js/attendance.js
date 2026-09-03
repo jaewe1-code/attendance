@@ -211,20 +211,29 @@ const AttendanceManager = {
     let html = '';
     const nowTime = window.getCurrentTimeString();
 
+    const selectedDayName = DataStore.getDayName(this.selectedDate);
+
     students.forEach(std => {
       const att = attendances.find(a => a.studentId === std.id);
       const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
       const initial = std.name ? std.name.slice(0, 1) : '?';
 
+      // 오늘 요일에 맞는 스케줄 확인
+      const todaySch = (std.schedules || []).find(s => s.day === selectedDayName);
+
       const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
-      const isFinished = att && att.checkIn && att.checkOut;
+      const isFinished = att && att.checkIn && att.checkOut && att.status !== 'absent';
       const isAbsent = att && att.status === 'absent';
 
       let statusBadge = `<span class="badge badge-left">미출석</span>`;
       if (isStudying) {
-        statusBadge = `<span class="badge badge-present">🔥 재실 중 (학습중)</span>`;
+        const sNum = att.sessions?.length || 1;
+        const sText = sNum > 1 ? ` (${sNum}차)` : '';
+        statusBadge = `<span class="badge badge-present">🔥 재실 중${sText}</span>`;
       } else if (isFinished) {
-        statusBadge = `<span class="badge badge-left">✅ 하원 완료</span>`;
+        const sNum = att.sessions?.length || 1;
+        const sText = sNum > 1 ? ` (${sNum}회 수업완료)` : '';
+        statusBadge = `<span class="badge badge-left">✅ 하원 완료${sText}</span>`;
       } else if (isAbsent) {
         statusBadge = `<span class="badge badge-absent">결석</span>`;
       } else if (att?.status === 'late') {
@@ -235,11 +244,48 @@ const AttendanceManager = {
 
       // 학습 시간 계산
       let durationDisplay = '-';
-      if (isFinished && att.durationMinutes > 0) {
+      if (att && att.durationMinutes > 0) {
         durationDisplay = window.formatMinutesToKorean(att.durationMinutes);
+        if (isStudying && att.checkIn) {
+          const curM = window.calculateDurationMinutes(att.checkIn, nowTime);
+          durationDisplay += ` <small style="color:var(--primary);">(+${curM}분)</small>`;
+        }
       } else if (isStudying && att.checkIn) {
         const dur = window.calculateDurationMinutes(att.checkIn, nowTime);
         durationDisplay = `<span data-live-checkin="${att.checkIn}">🔥 ${window.formatMinutesToKorean(dur)} 학습중</span>`;
+      }
+
+      // 다회차 세션 타임라인 텍스트
+      let sessionsSummary = '';
+      if (att && Array.isArray(att.sessions) && att.sessions.length > 1) {
+        sessionsSummary = att.sessions.map((s, idx) => 
+          `<span style="background:white; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.72rem;">${idx+1}차: ${s.in}~${s.out || '학습중'} (${s.duration ? window.formatMinutesToKorean(s.duration) : '진행'})</span>`
+        ).join(' ');
+      }
+
+      // 액션 버튼 (미출석 -> 입실, 재실 -> 퇴실, 하원완료 -> 재입실 가능!)
+      let actionBtnHtml = '';
+      if (isStudying) {
+        const sNum = att.sessions?.length || 1;
+        const outLabel = sNum > 1 ? `${sNum}차 퇴실 (하원)` : '퇴실 (하원)';
+        actionBtnHtml = `
+          <button class="btn btn-danger btn-sm" onclick="AttendanceManager.quickCheckOut('${std.id}')">
+            <i data-lucide="log-out"></i> ${outLabel}
+          </button>
+        `;
+      } else if (isFinished) {
+        const nextNum = (att.sessions?.length || 1) + 1;
+        actionBtnHtml = `
+          <button class="btn btn-primary btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')" style="background: #4f46e5;">
+            <i data-lucide="log-in"></i> ${nextNum}차 재입실
+          </button>
+        `;
+      } else {
+        actionBtnHtml = `
+          <button class="btn btn-success btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')">
+            <i data-lucide="log-in"></i> 입실 (등원)
+          </button>
+        `;
       }
 
       html += `
@@ -252,16 +298,22 @@ const AttendanceManager = {
                   ${std.name}
                   <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
                 </h3>
-                <div class="sub-info">
+                <div class="sub-info" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                   ${statusBadge}
+                  ${todaySch ? `<span class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700;">🕒 오늘수업 ${todaySch.time}</span>` : ''}
                   ${att?.memo ? `<span style="color: #6366f1; font-weight: 500;">· 💬 ${att.memo}</span>` : ''}
                 </div>
               </div>
             </div>
 
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openEditModal('${std.id}')" title="출석/시간 직접 수정">
-              <i data-lucide="sliders"></i>
-            </button>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="StudentsManager.openIndividualAttendance('${std.id}')" title="개인출석부">
+                <i data-lucide="calendar-days"></i>
+              </button>
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openEditModal('${std.id}')" title="출석/시간 직접 수정">
+                <i data-lucide="sliders"></i>
+              </button>
+            </div>
           </div>
 
           <!-- 입/퇴실 시간 및 학습시간 정보 바 -->
@@ -272,7 +324,7 @@ const AttendanceManager = {
             </div>
             <div class="time-item">
               <span class="time-label">하원(퇴실)</span>
-              <span class="time-val">${att?.checkOut || '-'}</span>
+              <span class="time-val">${att?.checkOut || (isStudying ? '학습중' : '-')}</span>
             </div>
             <div class="time-item" style="text-align: right;">
               <span class="time-label">총 학습시간</span>
@@ -280,23 +332,22 @@ const AttendanceManager = {
             </div>
           </div>
 
+          ${sessionsSummary ? `
+            <div style="display:flex; gap:4px; flex-wrap:wrap; background:#f8fafc; padding:6px 10px; border-radius:var(--radius-sm); margin-top:-4px;">
+              <span style="font-size:0.7rem; color:var(--text-muted); align-self:center; font-weight:600;">회차별:</span>
+              ${sessionsSummary}
+            </div>
+          ` : ''}
+
           <!-- 빠른 액션 버튼 행 -->
           <div class="card-action-row">
-            ${!isStudying ? `
-              <button class="btn btn-success btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')">
-                <i data-lucide="log-in"></i> 입실 (등원)
-              </button>
-            ` : `
-              <button class="btn btn-danger btn-sm" onclick="AttendanceManager.quickCheckOut('${std.id}')">
-                <i data-lucide="log-out"></i> 퇴실 (하원)
-              </button>
-            `}
+            ${actionBtnHtml}
 
             <button class="btn btn-outline btn-sm" onclick="AttendanceManager.openNotificationModal('${std.id}')">
               <i data-lucide="message-square"></i> 안심문자
             </button>
 
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openStatusSheet('${std.id}')" title="상태 변경">
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openStatusSheet('${std.id}')" title="상태 변경 및 초기화">
               <i data-lucide="more-horizontal"></i>
             </button>
           </div>
@@ -308,12 +359,37 @@ const AttendanceManager = {
     if (window.lucide) window.lucide.createIcons();
   },
 
+  // 특정 날짜의 출결 직접 수정 모달 열기 (개인출석부 등에서 호출)
+  openDirectEditModal(studentId, dateStr) {
+    const student = window.store.getStudentById(studentId);
+    if (!student) return;
+
+    const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
+    const modal = document.getElementById('attendanceEditModal');
+    if (!modal) return;
+
+    document.getElementById('editStudentId').value = student.id;
+    document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
+    document.getElementById('editDate').value = dateStr;
+    document.getElementById('editCheckIn').value = att?.checkIn || '';
+    document.getElementById('editCheckOut').value = att?.checkOut || '';
+    document.getElementById('editStatus').value = att?.status || 'present';
+    document.getElementById('editMemo').value = att?.memo || '';
+
+    modal.classList.add('active');
+  },
+
   // 원터치 입실
   quickCheckIn(studentId) {
     const student = window.store.getStudentById(studentId);
     const att = window.store.checkInStudent(studentId, null, this.selectedDate);
-    window.showToast?.(`🚪 ${student?.name || '학생'} 입실 처리되었습니다. (${att.checkIn})`);
+    const sNum = att.sessions?.length || 1;
+    const prefix = sNum > 1 ? `${sNum}차 ` : '';
+    window.showToast?.(`🚪 ${student?.name || '학생'} ${prefix}입실 처리되었습니다. (${att.checkIn})`);
     this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
   },
 
   // 원터치 퇴실
@@ -321,8 +397,13 @@ const AttendanceManager = {
     const student = window.store.getStudentById(studentId);
     const att = window.store.checkOutStudent(studentId, null, this.selectedDate);
     const durStr = window.formatMinutesToKorean(att.durationMinutes);
-    window.showToast?.(`👋 ${student?.name || '학생'} 퇴실 완료 (${att.checkOut}, 학습: ${durStr})`);
+    const sNum = att.sessions?.length || 1;
+    const prefix = sNum > 1 ? `${sNum}차 ` : '';
+    window.showToast?.(`👋 ${student?.name || '학생'} ${prefix}퇴실 완료 (${att.checkOut}, 오늘 누적: ${durStr})`);
     this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
   },
 
   // 출석 상세 수정 모달 열기
@@ -352,17 +433,18 @@ const AttendanceManager = {
 
   handleSaveAttendanceEdit() {
     const studentId = document.getElementById('editStudentId').value;
+    const targetDate = document.getElementById('editDate')?.value || this.selectedDate;
     const checkIn = document.getElementById('editCheckIn').value.trim() || null;
     const checkOut = document.getElementById('editCheckOut').value.trim() || null;
     const status = document.getElementById('editStatus').value;
     const memo = document.getElementById('editMemo').value.trim();
 
-    let att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
+    let att = window.store.attendances.find(a => a.studentId === studentId && a.date === targetDate);
     if (!att) {
       att = {
-        id: 'att-' + Date.now(),
+        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
         studentId,
-        date: this.selectedDate,
+        date: targetDate,
         checkIn,
         checkOut,
         status,
@@ -386,6 +468,9 @@ const AttendanceManager = {
     window.showToast?.('💾 출결 정보가 저장되었습니다.');
     this.closeEditModal();
     this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
   },
 
   // 상태 빠른 변경 시트 (보강, 지각, 결석 등)
@@ -408,14 +493,13 @@ const AttendanceManager = {
       const memo = prompt('보강 내용/시간(선택):', '주말 보강');
       window.store.setAttendanceStatus(studentId, 'supplement', this.selectedDate, memo);
     } else if (action === '5') {
-      const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
-      if (att) {
-        window.store.attendances = window.store.attendances.filter(a => a.id !== att.id);
-        window.store.saveAttendances();
-        window.showToast?.('출결 기록이 초기화되었습니다.');
-      }
+      window.store.clearAttendance(studentId, this.selectedDate);
+      window.showToast?.(`🗑️ [${student.name}] 학생의 오늘 출결 기록이 초기화되었습니다.`);
     }
     this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
   },
 
   // 안심 문자 모달 열기

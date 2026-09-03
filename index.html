@@ -992,6 +992,292 @@ body {
   border-bottom: none;
 }
 
+/* 10. Individual Student Attendance & Schedule */
+.schedule-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.schedule-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.schedule-day-badge {
+  background: var(--primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+}
+
+.schedule-time-text {
+  font-weight: 700;
+}
+
+.schedule-duration {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.btn-remove-sch {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.btn-remove-sch:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.btn-remove-sch svg, .btn-remove-sch i {
+  width: 14px;
+  height: 14px;
+}
+
+/* Quick Time Buttons */
+.quick-time-group {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-width: none;
+}
+.quick-time-group::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-time-btn {
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: #f1f5f9;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.quick-time-btn:hover, .quick-time-btn:active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Calendar Grid */
+.calendar-grid-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-header-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cal-header-cell.sun { color: #ef4444; }
+.cal-header-cell.sat { color: #3b82f6; }
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.cal-day-cell {
+  min-height: 64px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #f1f5f9;
+  background: #fafafa;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.cal-day-cell:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.cal-day-cell.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.cal-day-cell.today {
+  border: 2px solid var(--primary);
+  background: #f5f3ff;
+}
+
+.cal-day-cell.sun .cal-day-num { color: #ef4444; }
+.cal-day-cell.sat .cal-day-num { color: #3b82f6; }
+
+.cal-day-cell.scheduled {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.cal-day-num {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+  align-self: flex-start;
+  padding: 0 2px;
+}
+
+.cal-sch-tag {
+  font-size: 0.62rem;
+  color: #047857;
+  font-weight: 700;
+  background: #d1fae5;
+  border-radius: 4px;
+  padding: 1px 3px;
+  margin-top: 2px;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+}
+
+.cal-att-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 3px;
+  margin-top: 2px;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
+}
+
+.cal-att-badge.badge-present { background: #dcfce7; color: #15803d; }
+.cal-att-badge.badge-late { background: #fef3c7; color: #b45309; }
+.cal-att-badge.badge-early { background: #ffedd5; color: #c2410c; }
+.cal-att-badge.badge-absent { background: #fee2e2; color: #b91c1c; }
+.cal-att-badge.badge-supplement { background: #f3e8ff; color: #6d28d9; }
+.cal-att-badge.badge-missing { background: #f1f5f9; color: #94a3b8; }
+
+/* Individual List Row */
+.individual-list-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.individual-list-row {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.individual-list-row:hover {
+  border-color: var(--primary);
+  background: #f8fafc;
+}
+
+.individual-list-row.has-att {
+  border-left: 4px solid var(--primary);
+}
+
+.row-date-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  background: #f8fafc;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+
+.row-day {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.row-week {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.row-info-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row-times {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.row-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 8px;
+}
+
+.row-memo {
+  font-size: 0.72rem;
+  color: #6366f1;
+  margin-top: 2px;
+}
+
+.row-status-box {
+  text-align: right;
+}
   </style>
 
   <!-- Lucide Icons -->
@@ -1290,6 +1576,149 @@ body {
 
       </section>
 
+
+      <!-- ==========================================
+           VIEW 5: 학생 개인 출석부 및 요일/시간 스케줄 관리
+           ========================================== -->
+      <section id="view-individual" class="view-section">
+        
+        <div class="flex-between">
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 800;">학생 개인 출석부</h2>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">학생별 요일·시간 스케줄 및 월간 출결 관리</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btnExportIndividualExcel">
+            <i data-lucide="file-spreadsheet"></i> 개인 엑셀
+          </button>
+        </div>
+
+        <!-- 1. 학생 선택 및 검색 바 -->
+        <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn btn-ghost btn-icon btn-sm" id="btnPrevStudent" title="이전 학생">
+              <i data-lucide="chevron-left"></i>
+            </button>
+            <div style="flex: 1;">
+              <select id="individualStudentSelect" class="form-control" style="font-weight: 700; font-size: 0.95rem; border-color: var(--primary);">
+                <!-- JS Rendered Options -->
+              </select>
+            </div>
+            <button class="btn btn-ghost btn-icon btn-sm" id="btnNextStudent" title="다음 학생">
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+          <div class="search-input-wrap">
+            <i data-lucide="search"></i>
+            <input type="text" id="individualSearchInput" class="search-input" placeholder="학생 이름으로 검색하여 선택...">
+          </div>
+        </div>
+
+        <!-- 2. 선택된 학생 프로필 카드 -->
+        <div id="individualStudentProfileCard">
+          <!-- JS Rendered Profile Card -->
+        </div>
+
+        <!-- 3. 학생 요일별 수업 시간표(스케줄) 관리 카드 -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="flex-between">
+            <div class="card-title" style="margin-bottom: 0;">
+              <i data-lucide="clock" style="color: var(--primary);"></i> 요일별 수업 시간표 (스케줄)
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnSaveStudentSchedules">
+              <i data-lucide="save"></i> 시간표 저장
+            </button>
+          </div>
+
+          <!-- 등록된 스케줄 태그 목록 -->
+          <div id="individualScheduleList" class="schedule-chip-wrap">
+            <!-- JS Rendered Schedule Chips -->
+          </div>
+
+          <!-- 스케줄 추가 폼 -->
+          <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">➕ 새 요일 / 시간 추가</span>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>수업 요일</label>
+                <select id="scheduleDaySelect" class="form-control">
+                  <option value="월">월요일</option>
+                  <option value="화">화요일</option>
+                  <option value="수">수요일</option>
+                  <option value="목">목요일</option>
+                  <option value="금">금요일</option>
+                  <option value="토">토요일</option>
+                  <option value="일">일요일</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>시작 시간</label>
+                <input type="time" id="scheduleTimeInput" class="form-control" value="09:00">
+              </div>
+              <div class="form-group" style="max-width: 90px;">
+                <label>수업분</label>
+                <input type="number" id="scheduleDurationInput" class="form-control" value="90" step="10" min="30">
+              </div>
+            </div>
+
+            <!-- 빠른 시간 선택 버튼 프리셋 (오전 9시부터 지원) -->
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">빠른 시간 선택 (오전 9시 ~ 저녁 9시):</span>
+              <div class="quick-time-group">
+                <button type="button" class="quick-time-btn" data-time="09:00">09:00 (오전 9시)</button>
+                <button type="button" class="quick-time-btn" data-time="10:00">10:00 (오전 10시)</button>
+                <button type="button" class="quick-time-btn" data-time="11:00">11:00 (오전 11시)</button>
+                <button type="button" class="quick-time-btn" data-time="12:00">12:00 (낮 12시)</button>
+                <button type="button" class="quick-time-btn" data-time="13:00">13:00 (오후 1시)</button>
+                <button type="button" class="quick-time-btn" data-time="14:00">14:00 (오후 2시)</button>
+                <button type="button" class="quick-time-btn" data-time="15:00">15:00 (오후 3시)</button>
+                <button type="button" class="quick-time-btn" data-time="16:00">16:00 (오후 4시)</button>
+                <button type="button" class="quick-time-btn" data-time="17:00">17:00 (오후 5시)</button>
+                <button type="button" class="quick-time-btn" data-time="18:00">18:00 (오후 6시)</button>
+                <button type="button" class="quick-time-btn" data-time="19:00">19:00 (오후 7시)</button>
+                <button type="button" class="quick-time-btn" data-time="20:00">20:00 (오후 8시)</button>
+                <button type="button" class="quick-time-btn" data-time="21:00">21:00 (오후 9시)</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-outline btn-sm btn-full" id="btnAddScheduleItem">
+              <i data-lucide="plus-circle"></i> 위 요일 및 시간 시간표에 추가
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. 월간 개인 출석 현황 & 캘린더/리스트 -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="flex-between">
+            <div class="card-title" style="margin-bottom: 0;">
+              <i data-lucide="calendar-check" style="color: var(--success);"></i> 월간 출석부 & 기록
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="month" id="individualMonthSelect" class="form-control" style="width: auto; padding: 4px 8px; font-size: 0.8rem;">
+              <div class="view-toggle-wrap" style="display:flex; border:1px solid var(--border-color); border-radius:var(--radius-sm); overflow:hidden;">
+                <button type="button" class="btn btn-ghost btn-sm active" id="btnViewCalendar" style="padding:4px 8px; font-size:0.75rem; border-radius:0;">
+                  <i data-lucide="calendar"></i>
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnViewList" style="padding:4px 8px; font-size:0.75rem; border-radius:0;">
+                  <i data-lucide="list"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 월간 출결 통계 요약 -->
+          <div id="individualMonthSummary">
+            <!-- JS Rendered Summary -->
+          </div>
+
+          <!-- 캘린더 또는 리스트 컨테이너 -->
+          <div id="individualAttendanceHistoryContainer">
+            <!-- JS Rendered Calendar or List -->
+          </div>
+        </div>
+
+      </section>
+
     </main>
 
     <!-- Bottom Navigation Bar -->
@@ -1302,6 +1731,11 @@ body {
       <button class="nav-item kiosk-nav-btn" data-tab="kiosk">
         <i data-lucide="keypad"></i>
         <span>셀프출석</span>
+      </button>
+
+      <button class="nav-item" data-tab="individual">
+        <i data-lucide="calendar-days"></i>
+        <span>개인출석부</span>
       </button>
 
       <button class="nav-item" data-tab="students">
@@ -1578,6 +2012,14 @@ class DataStore {
     if (savedStudents) {
       try {
         this.students = JSON.parse(savedStudents);
+        // 혹시 과거에 동일한 id로 저장된 학생이 있다면 고유 ID 부여
+        const seenIds = new Set();
+        this.students.forEach((s, i) => {
+          if (!s.id || seenIds.has(s.id)) {
+            s.id = 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
+          }
+          seenIds.add(s.id);
+        });
       } catch (e) {
         this.students = [];
       }
@@ -1685,18 +2127,35 @@ class DataStore {
     });
   }
 
+  // 특정 요일(월~일) 한글명 가져오기 (YYYY-MM-DD)
+  static getDayName(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr + 'T00:00:00');
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return days[date.getDay()];
+  }
+
+  // 스케줄 배열을 사람이 읽기 편한 문자열로 변환 (예: "월 14:00, 화 16:00")
+  static formatScheduleText(schedules) {
+    if (!schedules || !Array.isArray(schedules) || schedules.length === 0) return '';
+    const dayOrder = { '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6, '일': 7 };
+    const sorted = [...schedules].sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+    return sorted.map(s => `${s.day} ${s.time || ''}`).join(', ');
+  }
+
   addStudent(studentData) {
     const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
     const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');
     
     const newStudent = {
-      id: 'std-' + Date.now(),
+      id: 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
       name: studentData.name.trim(),
       level: studentData.level || '초등',
       grade: studentData.grade || '',
       phone: studentData.phone || '',
       parentPhone: studentData.parentPhone || '',
       phoneLast4: phoneLast4,
+      schedules: Array.isArray(studentData.schedules) ? studentData.schedules : [],
       weeklyTargetHours: Number(studentData.weeklyTargetHours) || 10,
       memo: studentData.memo || '',
       createdAt: getTodayString()
@@ -1715,10 +2174,22 @@ class DataStore {
       this.students[index] = {
         ...this.students[index],
         ...studentData,
-        phoneLast4: phoneLast4
+        phoneLast4: phoneLast4,
+        schedules: studentData.schedules !== undefined ? studentData.schedules : (this.students[index].schedules || [])
       };
       this.saveStudents();
       return this.students[index];
+    }
+    return null;
+  }
+
+  // 특정 학생의 스케줄만 전용 업데이트
+  updateStudentSchedules(id, schedules) {
+    const student = this.getStudentById(id);
+    if (student) {
+      student.schedules = Array.isArray(schedules) ? schedules : [];
+      this.saveStudents();
+      return student;
     }
     return null;
   }
@@ -1738,18 +2209,40 @@ class DataStore {
     return this.attendances.find(a => a.studentId === studentId && a.date === dateStr);
   }
 
-  // 입실 (Check-in)
+  // 입실 (Check-in) - 다회차 입퇴실 완벽 지원
   checkInStudent(studentId, customTime = null, dateStr = getTodayString()) {
     const time = customTime || getCurrentTimeString();
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
 
     if (att) {
-      // 이미 오늘 기록이 있으면 입실 시간 갱신 또는 상태 갱신
-      att.checkIn = time;
-      att.status = 'present';
-      if (att.checkOut) {
-        att.durationMinutes = calculateDurationMinutes(att.checkIn, att.checkOut);
+      if (!Array.isArray(att.sessions)) {
+        att.sessions = [];
+        if (att.checkIn) {
+          att.sessions.push({
+            in: att.checkIn,
+            out: att.checkOut || null,
+            duration: att.durationMinutes || 0
+          });
+        }
       }
+
+      // 현재 아직 퇴실하지 않은 열린 세션이 있는지 확인
+      const openSession = att.sessions.find(s => !s.out);
+      if (openSession) {
+        // 이미 입실 중이면 입실 시간 갱신
+        openSession.in = time;
+        att.checkIn = time;
+      } else {
+        // 이미 하원 완료된 상태에서 다시 입실하는 경우 (하루 2회차 이상 수업)
+        att.sessions.push({
+          in: time,
+          out: null,
+          duration: 0
+        });
+        att.checkIn = time;
+        att.checkOut = null; // 재실 중 상태로 전환!
+      }
+      att.status = 'present';
     } else {
       att = {
         id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
@@ -1757,6 +2250,9 @@ class DataStore {
         date: dateStr,
         checkIn: time,
         checkOut: null,
+        sessions: [
+          { in: time, out: null, duration: 0 }
+        ],
         status: 'present',
         durationMinutes: 0,
         memo: ''
@@ -1767,16 +2263,40 @@ class DataStore {
     return att;
   }
 
-  // 퇴실 (Check-out)
+  // 퇴실 (Check-out) - 다회차 세션 총 누적 시간 자동 계산
   checkOutStudent(studentId, customTime = null, dateStr = getTodayString()) {
     const time = customTime || getCurrentTimeString();
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
 
     if (att) {
-      att.checkOut = time;
-      if (att.checkIn) {
-        att.durationMinutes = calculateDurationMinutes(att.checkIn, att.checkOut);
+      if (!Array.isArray(att.sessions)) {
+        att.sessions = [];
+        if (att.checkIn) {
+          att.sessions.push({
+            in: att.checkIn,
+            out: att.checkOut || null,
+            duration: att.durationMinutes || 0
+          });
+        }
       }
+
+      // 열려 있는 세션 닫기
+      const openSession = att.sessions.find(s => !s.out);
+      if (openSession) {
+        openSession.out = time;
+        openSession.duration = calculateDurationMinutes(openSession.in, time);
+      } else if (att.sessions.length > 0) {
+        // 열린 세션이 없으면 마지막 세션 퇴실 시간 갱신
+        const lastSession = att.sessions[att.sessions.length - 1];
+        lastSession.out = time;
+        lastSession.duration = calculateDurationMinutes(lastSession.in, time);
+      } else {
+        att.sessions.push({ in: att.checkIn || time, out: time, duration: 0 });
+      }
+
+      att.checkOut = time;
+      // 전체 세션 누적 시간 합산
+      att.durationMinutes = att.sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
       this.saveAttendances();
       return att;
     } else {
@@ -1785,8 +2305,11 @@ class DataStore {
         id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
         studentId: studentId,
         date: dateStr,
-        checkIn: '00:00',
+        checkIn: time,
         checkOut: time,
+        sessions: [
+          { in: time, out: time, duration: 0 }
+        ],
         status: 'present',
         durationMinutes: 0,
         memo: '입실 미체크'
@@ -1795,6 +2318,12 @@ class DataStore {
       this.saveAttendances();
       return att;
     }
+  }
+
+  // 특정 학생의 특정 날짜 출결 완전 초기화(삭제)
+  clearAttendance(studentId, dateStr = getTodayString()) {
+    this.attendances = this.attendances.filter(a => !(a.studentId === studentId && a.date === dateStr));
+    this.saveAttendances();
   }
 
   // 출결 수동 변경 (시간, 상태, 메모 수정)
@@ -1878,12 +2407,16 @@ class DataStore {
 }
 
 // 전역 싱글톤 인스턴스 생성
+window.DataStore = DataStore;
 window.store = new DataStore();
 window.getTodayString = getTodayString;
 window.getCurrentTimeString = getCurrentTimeString;
 window.calculateDurationMinutes = calculateDurationMinutes;
 window.formatMinutesToKorean = formatMinutesToKorean;
 
+
+
+// ==========================================
 
 /**
  * EduCheck - Notification & Message Helper Module
@@ -1966,6 +2499,1647 @@ const NotificationManager = {
 
 window.NotificationManager = NotificationManager;
 
+
+// ==========================================
+
+/**
+ * EduCheck - Attendance Management Module
+ * 실시간 출석/입퇴실 관리, 재실 현황 대시보드, 유동 시간 계산
+ */
+
+const AttendanceManager = {
+  selectedDate: window.getTodayString(),
+  levelFilter: 'all', // 'all', '초등', '중등', '고등'
+  statusFilter: 'all', // 'all', 'studying', 'finished', 'not_attended', 'absent'
+  searchKeyword: '',
+  timerInterval: null,
+
+  init() {
+    this.bindEvents();
+    this.startLiveTimer();
+    this.render();
+  },
+
+  bindEvents() {
+    // 1. 날짜 변경 이벤트
+    const dateInput = document.getElementById('attendanceDateInput');
+    if (dateInput) {
+      dateInput.value = this.selectedDate;
+      dateInput.addEventListener('change', (e) => {
+        this.selectedDate = e.target.value;
+        this.render();
+      });
+    }
+
+    // 2. 초/중/고 학교급 탭 클릭
+    const levelTabs = document.querySelectorAll('#attendanceLevelTabs .level-tab-btn');
+    levelTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        levelTabs.forEach(t => t.classList.remove('active'));
+        const btn = e.currentTarget;
+        btn.classList.add('active');
+        this.levelFilter = btn.dataset.level;
+        this.render();
+      });
+    });
+
+    // 3. 상태 필터 칩 클릭
+    const filterChips = document.querySelectorAll('#attendanceFilterChips .chip');
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        this.statusFilter = e.target.dataset.status;
+        this.render();
+      });
+    });
+
+    // 4. 출석 검색창
+    const searchInput = document.getElementById('attendanceSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchKeyword = e.target.value.trim().toLowerCase();
+        this.render();
+      });
+    }
+
+    // 5. 출석 수정 폼 제출
+    const form = document.getElementById('attendanceEditForm');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSaveAttendanceEdit();
+      });
+    }
+  },
+
+  // 1분마다 재실 학생 경과시간 갱신
+  startLiveTimer() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => {
+      // 오늘 날짜를 보고 있을 때만 렌더링 업데이트
+      if (this.selectedDate === window.getTodayString()) {
+        this.updateLiveDurations();
+      }
+    }, 30000); // 30초마다 갱신
+  },
+
+  updateLiveDurations() {
+    const liveBadges = document.querySelectorAll('[data-live-checkin]');
+    const currentNow = window.getCurrentTimeString();
+    liveBadges.forEach(badge => {
+      const checkInTime = badge.dataset.liveCheckin;
+      if (checkInTime) {
+        const mins = window.calculateDurationMinutes(checkInTime, currentNow);
+        badge.textContent = `🔥 ${window.formatMinutesToKorean(mins)} 학습중`;
+      }
+    });
+  },
+
+  render() {
+    this.renderDashboardStats();
+    this.renderAttendanceList();
+  },
+
+  // 상단 대시보드 통계 카드 및 학교급별 탭 뱃지 갱신
+  renderDashboardStats() {
+    const students = window.store.getStudents();
+    const attendances = window.store.getAttendancesByDate(this.selectedDate);
+
+    const totalStudents = students.length;
+    let studyingCount = 0;
+    let finishedCount = 0;
+    let absentCount = 0;
+
+    // 학교급별 인원 및 재실 카운트
+    const levelStats = {
+      초등: { total: 0, studying: 0 },
+      중등: { total: 0, studying: 0 },
+      고등: { total: 0, studying: 0 }
+    };
+
+    students.forEach(s => {
+      if (levelStats[s.level]) {
+        levelStats[s.level].total++;
+      }
+    });
+
+    attendances.forEach(att => {
+      const std = students.find(s => s.id === att.studentId);
+      const isStudying = att.checkIn && !att.checkOut && att.status !== 'absent';
+
+      if (isStudying) {
+        studyingCount++;
+        if (std && levelStats[std.level]) {
+          levelStats[std.level].studying++;
+        }
+      } else if (att.checkIn && att.checkOut) {
+        finishedCount++;
+      } else if (att.status === 'absent') {
+        absentCount++;
+      }
+    });
+
+    const notAttendedCount = Math.max(0, totalStudents - studyingCount - finishedCount - absentCount);
+
+    // 대시보드 히어로 숫자 업데이트
+    const totalEl = document.getElementById('statTotalStudents');
+    const studyingEl = document.getElementById('statStudying');
+    const finishedEl = document.getElementById('statFinished');
+
+    if (totalEl) totalEl.textContent = `${totalStudents}명`;
+    if (studyingEl) studyingEl.textContent = `${studyingCount}명`;
+    if (finishedEl) finishedEl.textContent = `${finishedCount}명`;
+
+    // 학교급 세그먼트 탭 뱃지 업데이트
+    const countAllEl = document.getElementById('levelCountAll');
+    const countElemEl = document.getElementById('levelCountElem');
+    const countMiddleEl = document.getElementById('levelCountMiddle');
+    const countHighEl = document.getElementById('levelCountHigh');
+
+    if (countAllEl) countAllEl.textContent = `재실 ${studyingCount}/${totalStudents}`;
+    if (countElemEl) countElemEl.textContent = `재실 ${levelStats['초등'].studying}/${levelStats['초등'].total}`;
+    if (countMiddleEl) countMiddleEl.textContent = `재실 ${levelStats['중등'].studying}/${levelStats['중등'].total}`;
+    if (countHighEl) countHighEl.textContent = `재실 ${levelStats['고등'].studying}/${levelStats['고등'].total}`;
+  },
+
+  // 학생별 출석 카드 리스트
+  renderAttendanceList() {
+    const container = document.getElementById('attendanceListContainer');
+    if (!container) return;
+
+    let students = window.store.getStudents();
+    const attendances = window.store.getAttendancesByDate(this.selectedDate);
+
+    // 1. 초/중/고 학교급 필터
+    if (this.levelFilter !== 'all') {
+      students = students.filter(s => s.level === this.levelFilter);
+    }
+
+    // 2. 검색어 필터
+    if (this.searchKeyword) {
+      students = students.filter(s => 
+        s.name.toLowerCase().includes(this.searchKeyword) ||
+        (s.phone && s.phone.includes(this.searchKeyword)) ||
+        (s.grade && s.grade.includes(this.searchKeyword))
+      );
+    }
+
+    // 3. 상태 필터 (공부중, 하원완료 등)
+    if (this.statusFilter !== 'all') {
+      students = students.filter(std => {
+        const att = attendances.find(a => a.studentId === std.id);
+        if (this.statusFilter === 'studying') {
+          return att && att.checkIn && !att.checkOut && att.status !== 'absent';
+        } else if (this.statusFilter === 'finished') {
+          return att && att.checkIn && att.checkOut;
+        } else if (this.statusFilter === 'not_attended') {
+          return !att || (!att.checkIn && att.status !== 'absent');
+        } else if (this.statusFilter === 'absent') {
+          return att && att.status === 'absent';
+        }
+        return true;
+      });
+    }
+
+    if (students.length === 0) {
+      const levelName = this.levelFilter === 'all' ? '' : `[${this.levelFilter}부] `;
+      container.innerHTML = `
+        <div class="card text-center" style="padding: 35px 20px;">
+          <p style="color: var(--text-muted); font-size: 0.92rem;">${levelName}해당 조건의 학생/출석 데이터가 없습니다.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    const nowTime = window.getCurrentTimeString();
+
+    const selectedDayName = DataStore.getDayName(this.selectedDate);
+
+    students.forEach(std => {
+      const att = attendances.find(a => a.studentId === std.id);
+      const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
+      const initial = std.name ? std.name.slice(0, 1) : '?';
+
+      // 오늘 요일에 맞는 스케줄 확인
+      const todaySch = (std.schedules || []).find(s => s.day === selectedDayName);
+
+      const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
+      const isFinished = att && att.checkIn && att.checkOut && att.status !== 'absent';
+      const isAbsent = att && att.status === 'absent';
+
+      let statusBadge = `<span class="badge badge-left">미출석</span>`;
+      if (isStudying) {
+        const sNum = att.sessions?.length || 1;
+        const sText = sNum > 1 ? ` (${sNum}차)` : '';
+        statusBadge = `<span class="badge badge-present">🔥 재실 중${sText}</span>`;
+      } else if (isFinished) {
+        const sNum = att.sessions?.length || 1;
+        const sText = sNum > 1 ? ` (${sNum}회 수업완료)` : '';
+        statusBadge = `<span class="badge badge-left">✅ 하원 완료${sText}</span>`;
+      } else if (isAbsent) {
+        statusBadge = `<span class="badge badge-absent">결석</span>`;
+      } else if (att?.status === 'late') {
+        statusBadge = `<span class="badge badge-late">지각</span>`;
+      } else if (att?.status === 'supplement') {
+        statusBadge = `<span class="badge badge-supplement">보강</span>`;
+      }
+
+      // 학습 시간 계산
+      let durationDisplay = '-';
+      if (att && att.durationMinutes > 0) {
+        durationDisplay = window.formatMinutesToKorean(att.durationMinutes);
+        if (isStudying && att.checkIn) {
+          const curM = window.calculateDurationMinutes(att.checkIn, nowTime);
+          durationDisplay += ` <small style="color:var(--primary);">(+${curM}분)</small>`;
+        }
+      } else if (isStudying && att.checkIn) {
+        const dur = window.calculateDurationMinutes(att.checkIn, nowTime);
+        durationDisplay = `<span data-live-checkin="${att.checkIn}">🔥 ${window.formatMinutesToKorean(dur)} 학습중</span>`;
+      }
+
+      // 다회차 세션 타임라인 텍스트
+      let sessionsSummary = '';
+      if (att && Array.isArray(att.sessions) && att.sessions.length > 1) {
+        sessionsSummary = att.sessions.map((s, idx) => 
+          `<span style="background:white; border:1px solid #e2e8f0; padding:2px 6px; border-radius:4px; font-size:0.72rem;">${idx+1}차: ${s.in}~${s.out || '학습중'} (${s.duration ? window.formatMinutesToKorean(s.duration) : '진행'})</span>`
+        ).join(' ');
+      }
+
+      // 액션 버튼 (미출석 -> 입실, 재실 -> 퇴실, 하원완료 -> 재입실 가능!)
+      let actionBtnHtml = '';
+      if (isStudying) {
+        const sNum = att.sessions?.length || 1;
+        const outLabel = sNum > 1 ? `${sNum}차 퇴실 (하원)` : '퇴실 (하원)';
+        actionBtnHtml = `
+          <button class="btn btn-danger btn-sm" onclick="AttendanceManager.quickCheckOut('${std.id}')">
+            <i data-lucide="log-out"></i> ${outLabel}
+          </button>
+        `;
+      } else if (isFinished) {
+        const nextNum = (att.sessions?.length || 1) + 1;
+        actionBtnHtml = `
+          <button class="btn btn-primary btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')" style="background: #4f46e5;">
+            <i data-lucide="log-in"></i> ${nextNum}차 재입실
+          </button>
+        `;
+      } else {
+        actionBtnHtml = `
+          <button class="btn btn-success btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')">
+            <i data-lucide="log-in"></i> 입실 (등원)
+          </button>
+        `;
+      }
+
+      html += `
+        <div class="student-card ${isStudying ? 'is-studying' : ''}">
+          <div class="student-card-top">
+            <div class="student-profile">
+              <div class="student-avatar ${avatarClass}">${initial}</div>
+              <div class="student-meta">
+                <h3>
+                  ${std.name}
+                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
+                </h3>
+                <div class="sub-info" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  ${statusBadge}
+                  ${todaySch ? `<span class="badge" style="background:#e0e7ff; color:#4338ca; font-weight:700;">🕒 오늘수업 ${todaySch.time}</span>` : ''}
+                  ${att?.memo ? `<span style="color: #6366f1; font-weight: 500;">· 💬 ${att.memo}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="StudentsManager.openIndividualAttendance('${std.id}')" title="개인출석부">
+                <i data-lucide="calendar-days"></i>
+              </button>
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openEditModal('${std.id}')" title="출석/시간 직접 수정">
+                <i data-lucide="sliders"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 입/퇴실 시간 및 학습시간 정보 바 -->
+          <div class="attendance-time-bar">
+            <div class="time-item">
+              <span class="time-label">등원(입실)</span>
+              <span class="time-val">${att?.checkIn || '-'}</span>
+            </div>
+            <div class="time-item">
+              <span class="time-label">하원(퇴실)</span>
+              <span class="time-val">${att?.checkOut || (isStudying ? '학습중' : '-')}</span>
+            </div>
+            <div class="time-item" style="text-align: right;">
+              <span class="time-label">총 학습시간</span>
+              <span class="study-duration">${durationDisplay}</span>
+            </div>
+          </div>
+
+          ${sessionsSummary ? `
+            <div style="display:flex; gap:4px; flex-wrap:wrap; background:#f8fafc; padding:6px 10px; border-radius:var(--radius-sm); margin-top:-4px;">
+              <span style="font-size:0.7rem; color:var(--text-muted); align-self:center; font-weight:600;">회차별:</span>
+              ${sessionsSummary}
+            </div>
+          ` : ''}
+
+          <!-- 빠른 액션 버튼 행 -->
+          <div class="card-action-row">
+            ${actionBtnHtml}
+
+            <button class="btn btn-outline btn-sm" onclick="AttendanceManager.openNotificationModal('${std.id}')">
+              <i data-lucide="message-square"></i> 안심문자
+            </button>
+
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openStatusSheet('${std.id}')" title="상태 변경 및 초기화">
+              <i data-lucide="more-horizontal"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 특정 날짜의 출결 직접 수정 모달 열기 (개인출석부 등에서 호출)
+  openDirectEditModal(studentId, dateStr) {
+    const student = window.store.getStudentById(studentId);
+    if (!student) return;
+
+    const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
+    const modal = document.getElementById('attendanceEditModal');
+    if (!modal) return;
+
+    document.getElementById('editStudentId').value = student.id;
+    document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
+    document.getElementById('editDate').value = dateStr;
+    document.getElementById('editCheckIn').value = att?.checkIn || '';
+    document.getElementById('editCheckOut').value = att?.checkOut || '';
+    document.getElementById('editStatus').value = att?.status || 'present';
+    document.getElementById('editMemo').value = att?.memo || '';
+
+    modal.classList.add('active');
+  },
+
+  // 원터치 입실
+  quickCheckIn(studentId) {
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.checkInStudent(studentId, null, this.selectedDate);
+    const sNum = att.sessions?.length || 1;
+    const prefix = sNum > 1 ? `${sNum}차 ` : '';
+    window.showToast?.(`🚪 ${student?.name || '학생'} ${prefix}입실 처리되었습니다. (${att.checkIn})`);
+    this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  // 원터치 퇴실
+  quickCheckOut(studentId) {
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.checkOutStudent(studentId, null, this.selectedDate);
+    const durStr = window.formatMinutesToKorean(att.durationMinutes);
+    const sNum = att.sessions?.length || 1;
+    const prefix = sNum > 1 ? `${sNum}차 ` : '';
+    window.showToast?.(`👋 ${student?.name || '학생'} ${prefix}퇴실 완료 (${att.checkOut}, 오늘 누적: ${durStr})`);
+    this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  // 출석 상세 수정 모달 열기
+  openEditModal(studentId) {
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
+    if (!student) return;
+
+    const modal = document.getElementById('attendanceEditModal');
+    if (!modal) return;
+
+    document.getElementById('editStudentId').value = student.id;
+    document.getElementById('editStudentName').textContent = `${student.name} (${student.level} ${student.grade})`;
+    document.getElementById('editDate').value = this.selectedDate;
+    document.getElementById('editCheckIn').value = att?.checkIn || '';
+    document.getElementById('editCheckOut').value = att?.checkOut || '';
+    document.getElementById('editStatus').value = att?.status || 'present';
+    document.getElementById('editMemo').value = att?.memo || '';
+
+    modal.classList.add('active');
+  },
+
+  closeEditModal() {
+    const modal = document.getElementById('attendanceEditModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  handleSaveAttendanceEdit() {
+    const studentId = document.getElementById('editStudentId').value;
+    const targetDate = document.getElementById('editDate')?.value || this.selectedDate;
+    const checkIn = document.getElementById('editCheckIn').value.trim() || null;
+    const checkOut = document.getElementById('editCheckOut').value.trim() || null;
+    const status = document.getElementById('editStatus').value;
+    const memo = document.getElementById('editMemo').value.trim();
+
+    let att = window.store.attendances.find(a => a.studentId === studentId && a.date === targetDate);
+    if (!att) {
+      att = {
+        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+        studentId,
+        date: targetDate,
+        checkIn,
+        checkOut,
+        status,
+        durationMinutes: 0,
+        memo
+      };
+      if (checkIn && checkOut) {
+        att.durationMinutes = window.calculateDurationMinutes(checkIn, checkOut);
+      }
+      window.store.attendances.push(att);
+      window.store.saveAttendances();
+    } else {
+      window.store.updateAttendanceRecord(att.id, {
+        checkIn,
+        checkOut,
+        status,
+        memo
+      });
+    }
+
+    window.showToast?.('💾 출결 정보가 저장되었습니다.');
+    this.closeEditModal();
+    this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  // 상태 빠른 변경 시트 (보강, 지각, 결석 등)
+  openStatusSheet(studentId) {
+    const student = window.store.getStudentById(studentId);
+    if (!student) return;
+    
+    const action = prompt(`[${student.name}] 상태를 선택해주세요:\n1. 정상출석\n2. 지각\n3. 결석\n4. 보강수업\n5. 초기화(삭제)\n(번호 1~5 입력)`);
+    if (!action) return;
+
+    if (action === '1') {
+      window.store.setAttendanceStatus(studentId, 'present', this.selectedDate);
+    } else if (action === '2') {
+      const memo = prompt('지각 사유 메모(선택):', '');
+      window.store.setAttendanceStatus(studentId, 'late', this.selectedDate, memo || '지각');
+    } else if (action === '3') {
+      const memo = prompt('결석 사유 메모(선택):', '');
+      window.store.setAttendanceStatus(studentId, 'absent', this.selectedDate, memo || '결석');
+    } else if (action === '4') {
+      const memo = prompt('보강 내용/시간(선택):', '주말 보강');
+      window.store.setAttendanceStatus(studentId, 'supplement', this.selectedDate, memo);
+    } else if (action === '5') {
+      window.store.clearAttendance(studentId, this.selectedDate);
+      window.showToast?.(`🗑️ [${student.name}] 학생의 오늘 출결 기록이 초기화되었습니다.`);
+    }
+    this.render();
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  // 안심 문자 모달 열기
+  openNotificationModal(studentId) {
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
+    if (!student) return;
+
+    const modal = document.getElementById('notificationModal');
+    if (!modal) return;
+
+    const isFinished = att && att.checkIn && att.checkOut;
+    const type = isFinished ? 'checkOut' : (att?.checkIn ? 'checkIn' : 'status');
+
+    const msg = window.NotificationManager.createMessage(student, att, type);
+
+    document.getElementById('notifStudentName').textContent = student.name;
+    document.getElementById('notifParentPhone').textContent = student.parentPhone || '연락처 미등록';
+    document.getElementById('notifMessagePreview').value = msg;
+    document.getElementById('notifTargetPhone').value = student.parentPhone || '';
+
+    // 모달 데이터 속성에 저장
+    modal.dataset.studentId = studentId;
+    modal.dataset.date = this.selectedDate;
+
+    modal.classList.add('active');
+  },
+
+  closeNotificationModal() {
+    const modal = document.getElementById('notificationModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  // 모달 내에서 메시지 타입 변경 (등원/하원/출결변동)
+  changeNotificationType(type) {
+    const modal = document.getElementById('notificationModal');
+    const studentId = modal.dataset.studentId;
+    const dateStr = modal.dataset.date;
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.getTodayAttendanceForStudent(studentId, dateStr);
+
+    const msg = window.NotificationManager.createMessage(student, att, type);
+    document.getElementById('notifMessagePreview').value = msg;
+  }
+};
+
+window.AttendanceManager = AttendanceManager;
+
+
+// ==========================================
+
+/**
+ * EduCheck - Student Management Module
+ * 학생 목록 조회, 필터링, 신규 등록, 수정, 삭제 로직
+ */
+
+const StudentsManager = {
+  currentFilter: 'all', // 'all', '초등', '중등', '고등'
+  searchKeyword: '',
+
+  init() {
+    this.bindEvents();
+    this.render();
+  },
+
+  bindEvents() {
+    // 1. 초/중/고 필터 칩 클릭
+    const filterChips = document.querySelectorAll('#studentFilterChips .chip');
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        this.currentFilter = e.target.dataset.filter;
+        this.render();
+      });
+    });
+
+    // 2. 검색 입력
+    const searchInput = document.getElementById('studentSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchKeyword = e.target.value.trim().toLowerCase();
+        this.render();
+      });
+    }
+
+    // 3. 학생 등록 폼 제출
+    const studentForm = document.getElementById('studentForm');
+    if (studentForm) {
+      studentForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleSaveStudent();
+      });
+    }
+  },
+
+  render() {
+    const container = document.getElementById('studentListContainer');
+    if (!container) return;
+
+    let students = window.store.getStudents();
+
+    // 1. 구분(초/중/고) 필터링
+    if (this.currentFilter !== 'all') {
+      students = students.filter(s => s.level === this.currentFilter);
+    }
+
+    // 2. 검색어 필터링
+    if (this.searchKeyword) {
+      students = students.filter(s => 
+        s.name.toLowerCase().includes(this.searchKeyword) ||
+        (s.phone && s.phone.includes(this.searchKeyword)) ||
+        (s.parentPhone && s.parentPhone.includes(this.searchKeyword)) ||
+        (s.grade && s.grade.toLowerCase().includes(this.searchKeyword))
+      );
+    }
+
+    // 학생 수 배지 업데이트
+    const countBadge = document.getElementById('studentTotalCount');
+    if (countBadge) countBadge.textContent = `${students.length}명`;
+
+    if (students.length === 0) {
+      container.innerHTML = `
+        <div class="card text-center" style="padding: 40px 20px;">
+          <p style="color: var(--text-muted); font-size: 0.95rem;">등록된 학생이 없거나 조건에 맞는 학생이 없습니다.</p>
+          <button class="btn btn-primary btn-sm" style="margin: 14px auto 0 auto;" onclick="StudentsManager.openAddModal()">
+            <i data-lucide="user-plus"></i> 학생 새로 등록
+          </button>
+        </div>
+      `;
+      if (window.lucide) window.lucide.createIcons();
+      return;
+    }
+
+    let html = '';
+    students.forEach(std => {
+      const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
+      const initial = std.name ? std.name.slice(0, 1) : '?';
+      
+        // 누적 학습 시간 계산
+      const allAtts = window.store.attendances.filter(a => a.studentId === std.id);
+      const totalMinutes = allAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+      const attendanceDays = allAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
+      const schSummary = DataStore.formatScheduleText(std.schedules);
+
+      html += `
+        <div class="student-card">
+          <div class="student-card-top">
+            <div class="student-profile">
+              <div class="student-avatar ${avatarClass}">${initial}</div>
+              <div class="student-meta">
+                <h3>
+                  ${std.name}
+                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
+                </h3>
+                <div class="sub-info">
+                  <span>📱 ${std.parentPhone ? '학부모: ' + std.parentPhone : (std.phone || '연락처 없음')}</span>
+                </div>
+                ${schSummary ? `
+                  <div style="margin-top: 4px;">
+                    <span class="badge" style="background:#eef2ff; color:var(--primary); font-size:0.75rem; padding: 2px 8px; border-radius: var(--radius-full);">
+                      🕒 ${schSummary}
+                    </span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-icon btn-sm" onclick="StudentsManager.openEditModal('${std.id}')" title="수정">
+              <i data-lucide="more-vertical"></i>
+            </button>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-muted); background: #f8fafc; padding: 8px 12px; border-radius: var(--radius-sm);">
+            <div class="flex-between">
+              <span>📅 누적 출석: <strong>${attendanceDays}일</strong></span>
+              <span>⏱️ 총 학습: <strong>${window.formatMinutesToKorean(totalMinutes)}</strong></span>
+            </div>
+            ${std.memo ? `<div style="margin-top: 4px; color: #475569;">💡 ${std.memo}</div>` : ''}
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-sm btn-full" onclick="StudentsManager.openIndividualAttendance('${std.id}')" style="background: #4f46e5;">
+              <i data-lucide="calendar-days"></i> 개인출석부·시간표
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="StudentsManager.openEditModal('${std.id}')">
+              <i data-lucide="edit-3"></i> 수정
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="StudentsManager.deleteStudent('${std.id}', '${std.name}')">
+              <i data-lucide="trash-2"></i> 삭제
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 특정 학생의 개인출석부 탭으로 바로 이동
+  openIndividualAttendance(studentId) {
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.selectStudent(studentId);
+    }
+    if (window.App) {
+      window.App.switchTab('individual');
+    }
+  },
+
+  // 학생 등록 모달 열기
+  openAddModal() {
+    const modal = document.getElementById('studentModal');
+    const form = document.getElementById('studentForm');
+    if (!modal || !form) return;
+
+    form.reset();
+    document.getElementById('modalStudentId').value = '';
+    document.getElementById('studentModalTitle').textContent = '새 학생 등록';
+    modal.classList.add('active');
+  },
+
+  // 학생 수정 모달 열기
+  openEditModal(id) {
+    const student = window.store.getStudentById(id);
+    if (!student) return;
+
+    const modal = document.getElementById('studentModal');
+    if (!modal) return;
+
+    document.getElementById('studentModalTitle').textContent = '학생 정보 수정';
+    document.getElementById('modalStudentId').value = student.id;
+    document.getElementById('modalStudentName').value = student.name;
+    document.getElementById('modalStudentLevel').value = student.level || '초등';
+    document.getElementById('modalStudentGrade').value = student.grade || '';
+    document.getElementById('modalStudentPhone').value = student.phone || '';
+    document.getElementById('modalParentPhone').value = student.parentPhone || '';
+    document.getElementById('modalTargetHours').value = student.weeklyTargetHours || 10;
+    document.getElementById('modalStudentMemo').value = student.memo || '';
+
+    modal.classList.add('active');
+  },
+
+  // 모달 닫기
+  closeModal() {
+    const modal = document.getElementById('studentModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  // 저장 (추가 또는 수정)
+  handleSaveStudent() {
+    const id = document.getElementById('modalStudentId').value;
+    const name = document.getElementById('modalStudentName').value.trim();
+    const level = document.getElementById('modalStudentLevel').value;
+    const grade = document.getElementById('modalStudentGrade').value.trim();
+    const phone = document.getElementById('modalStudentPhone').value.trim();
+    const parentPhone = document.getElementById('modalParentPhone').value.trim();
+    const weeklyTargetHours = Number(document.getElementById('modalTargetHours').value) || 10;
+    const memo = document.getElementById('modalStudentMemo').value.trim();
+
+    if (!name) {
+      alert('학생 이름을 입력해주세요.');
+      return;
+    }
+
+    const data = {
+      name,
+      level,
+      grade,
+      phone,
+      parentPhone,
+      weeklyTargetHours,
+      memo
+    };
+
+    if (id) {
+      window.store.updateStudent(id, data);
+      window.showToast?.(`✅ ${name} 학생 정보가 수정되었습니다.`);
+    } else {
+      window.store.addStudent(data);
+      window.showToast?.(`🎉 ${name} 학생이 새로 등록되었습니다.`);
+    }
+
+    this.closeModal();
+    this.render();
+    if (window.AttendanceManager) {
+      window.AttendanceManager.render();
+    }
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  // 학생 삭제
+  deleteStudent(id, name) {
+    if (confirm(`'${name}' 학생을 삭제하시겠습니까?\n(등록된 출결 기록도 모두 삭제됩니다)`)) {
+      window.store.deleteStudent(id);
+      window.showToast?.(`🗑️ ${name} 학생이 삭제되었습니다.`);
+      this.render();
+      if (window.AttendanceManager) {
+        window.AttendanceManager.render();
+      }
+      if (window.IndividualAttendanceManager) {
+        window.IndividualAttendanceManager.setDefaultStudent();
+        window.IndividualAttendanceManager.render();
+      }
+    }
+  }
+};
+
+window.StudentsManager = StudentsManager;
+
+
+
+// ==========================================
+
+/**
+ * EduCheck - Individual Student Attendance & Schedule Management Module
+ * 학생 개인별 요일/시간 스케줄 관리 및 월간 개인 출석부 캘린더/통계
+ */
+
+const IndividualAttendanceManager = {
+  selectedStudentId: null,
+  selectedMonth: window.getTodayString().slice(0, 7),
+  tempSchedules: [], // 스케줄 편집 중 임시 저장 배열
+  viewMode: 'calendar', // 'calendar' 또는 'list'
+
+  init() {
+    this.bindEvents();
+    this.setDefaultStudent();
+    this.render();
+  },
+
+  setDefaultStudent() {
+    const students = window.store.getStudents();
+    if (students.length > 0 && !this.selectedStudentId) {
+      this.selectedStudentId = students[0].id;
+    }
+  },
+
+  bindEvents() {
+    // 1. 학생 선택 셀렉트박스 변경
+    const studentSelect = document.getElementById('individualStudentSelect');
+    if (studentSelect) {
+      studentSelect.addEventListener('change', (e) => {
+        this.selectStudent(e.target.value);
+      });
+    }
+
+    // 2. 학생 검색어 입력
+    const searchInput = document.getElementById('individualSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const keyword = e.target.value.trim().toLowerCase();
+        this.filterStudentDropdown(keyword);
+      });
+    }
+
+    // 3. 이전 / 다음 학생 이동 버튼
+    const btnPrev = document.getElementById('btnPrevStudent');
+    const btnNext = document.getElementById('btnNextStudent');
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => this.navigateStudent(-1));
+    }
+    if (btnNext) {
+      btnNext.addEventListener('click', () => this.navigateStudent(1));
+    }
+
+    // 4. 월 선택기 변경
+    const monthSelect = document.getElementById('individualMonthSelect');
+    if (monthSelect) {
+      monthSelect.value = this.selectedMonth;
+      monthSelect.addEventListener('change', (e) => {
+        this.selectedMonth = e.target.value;
+        this.renderAttendanceHistory();
+      });
+    }
+
+    // 5. 뷰 모드 토글 (캘린더 / 리스트)
+    const btnViewCal = document.getElementById('btnViewCalendar');
+    const btnViewList = document.getElementById('btnViewList');
+    if (btnViewCal && btnViewList) {
+      btnViewCal.addEventListener('click', () => {
+        this.viewMode = 'calendar';
+        btnViewCal.classList.add('active');
+        btnViewList.classList.remove('active');
+        this.renderAttendanceHistory();
+      });
+      btnViewList.addEventListener('click', () => {
+        this.viewMode = 'list';
+        btnViewList.classList.add('active');
+        btnViewCal.classList.remove('active');
+        this.renderAttendanceHistory();
+      });
+    }
+
+    // 6. 스케줄 추가 폼 이벤트
+    const btnAddSchedule = document.getElementById('btnAddScheduleItem');
+    if (btnAddSchedule) {
+      btnAddSchedule.addEventListener('click', () => this.handleAddScheduleItem());
+    }
+
+    // 7. 스케줄 빠른 시간 버튼 클릭 (14:00, 15:00 등)
+    const quickTimeBtns = document.querySelectorAll('.quick-time-btn');
+    quickTimeBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const timeVal = e.currentTarget.dataset.time;
+        const timeInput = document.getElementById('scheduleTimeInput');
+        if (timeInput && timeVal) {
+          timeInput.value = timeVal;
+        }
+      });
+    });
+
+    // 8. 스케줄 최종 저장 버튼
+    const btnSaveSchedules = document.getElementById('btnSaveStudentSchedules');
+    if (btnSaveSchedules) {
+      btnSaveSchedules.addEventListener('click', () => this.handleSaveSchedules());
+    }
+
+    // 9. 개인 출석부 엑셀 다운로드 버튼
+    const btnExportExcel = document.getElementById('btnExportIndividualExcel');
+    if (btnExportExcel) {
+      btnExportExcel.addEventListener('click', () => this.exportExcel());
+    }
+  },
+
+  // 학생 검색 시 드롭다운 옵션 필터링
+  filterStudentDropdown(keyword) {
+    const studentSelect = document.getElementById('individualStudentSelect');
+    if (!studentSelect) return;
+    const students = window.store.getStudents();
+    
+    let filtered = students;
+    if (keyword) {
+      filtered = students.filter(s => 
+        s.name.toLowerCase().includes(keyword) || 
+        (s.phone && s.phone.includes(keyword)) ||
+        (s.grade && s.grade.toLowerCase().includes(keyword))
+      );
+    }
+
+    studentSelect.innerHTML = filtered.map(s => {
+      const schText = DataStore.formatScheduleText(s.schedules);
+      const subInfo = schText ? ` (${schText})` : ` [${s.level} ${s.grade || ''}]`;
+      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>${s.name}${subInfo}</option>`;
+    }).join('');
+
+    if (filtered.length > 0 && !filtered.some(s => s.id === this.selectedStudentId)) {
+      this.selectStudent(filtered[0].id);
+    }
+  },
+
+  // 학생 선택 시 실행
+  selectStudent(studentId) {
+    this.selectedStudentId = studentId;
+    const student = window.store.getStudentById(studentId);
+    if (student) {
+      this.tempSchedules = Array.isArray(student.schedules) ? JSON.parse(JSON.stringify(student.schedules)) : [];
+    } else {
+      this.tempSchedules = [];
+    }
+    this.render();
+  },
+
+  // 이전/다음 학생 이동
+  navigateStudent(direction) {
+    const students = window.store.getStudents();
+    if (students.length === 0) return;
+    const currentIndex = students.findIndex(s => s.id === this.selectedStudentId);
+    let nextIndex = currentIndex + direction;
+    if (nextIndex < 0) nextIndex = students.length - 1;
+    if (nextIndex >= students.length) nextIndex = 0;
+    this.selectStudent(students[nextIndex].id);
+  },
+
+  render() {
+    this.renderStudentDropdown();
+    this.renderStudentInfoCard();
+    this.renderScheduleEditor();
+    this.renderAttendanceHistory();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 1. 학생 드롭다운 렌더링
+  renderStudentDropdown() {
+    const studentSelect = document.getElementById('individualStudentSelect');
+    if (!studentSelect) return;
+
+    const students = window.store.getStudents();
+    if (students.length === 0) {
+      studentSelect.innerHTML = '<option value="">등록된 학생이 없습니다</option>';
+      this.selectedStudentId = null;
+      return;
+    }
+
+    if (!this.selectedStudentId || !students.some(s => s.id === this.selectedStudentId)) {
+      this.selectedStudentId = students[0].id;
+    }
+
+    studentSelect.innerHTML = students.map(s => {
+      const schText = DataStore.formatScheduleText(s.schedules);
+      const subInfo = schText ? ` (${schText})` : ` [${s.level} ${s.grade || ''}]`;
+      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>${s.name}${subInfo}</option>`;
+    }).join('');
+  },
+
+  // 2. 학생 기본 프로필 정보 카드 렌더링
+  renderStudentInfoCard() {
+    const profileContainer = document.getElementById('individualStudentProfileCard');
+    if (!profileContainer) return;
+
+    const student = window.store.getStudentById(this.selectedStudentId);
+    if (!student) {
+      profileContainer.innerHTML = `
+        <div class="card text-center" style="padding: 24px;">
+          <p style="color: var(--text-muted); font-size: 0.9rem;">학생을 등록하거나 선택해주세요.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const avatarClass = student.level === '초등' ? 'elem' : student.level === '중등' ? 'middle' : 'high';
+    const initial = student.name ? student.name.slice(0, 1) : '?';
+    const scheduleSummary = DataStore.formatScheduleText(student.schedules) || '설정된 스케줄 없음';
+
+    // 해당 학생의 이번 달 통계
+    const monthlyAtts = window.store.attendances.filter(a => a.studentId === student.id && a.date && a.date.startsWith(this.selectedMonth));
+    const totalMinutes = monthlyAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+    const attendedCount = monthlyAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
+
+    profileContainer.innerHTML = `
+      <div class="student-card" style="margin-bottom: 0; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+        <div class="student-card-top">
+          <div class="student-profile">
+            <div class="student-avatar ${avatarClass}">${initial}</div>
+            <div class="student-meta">
+              <h3>
+                ${student.name}
+                <span class="badge badge-school">${student.level} · ${student.grade || '전체'}</span>
+              </h3>
+              <div class="sub-info" style="display:flex; flex-direction:column; gap:2px; margin-top:3px;">
+                <span>📱 학생: ${student.phone || '미등록'} | 학부모: ${student.parentPhone || '미등록'}</span>
+                <span style="color: var(--primary); font-weight: 600;">🕒 정규 시간표: ${scheduleSummary}</span>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="StudentsManager.openEditModal('${student.id}')" title="정보 수정">
+            <i data-lucide="edit-3"></i> 학생수정
+          </button>
+        </div>
+
+        <div style="font-size: 0.82rem; color: var(--text-muted); background: white; border: 1px solid var(--border-color); padding: 10px 14px; border-radius: var(--radius-md);">
+          <div class="flex-between">
+            <span>📅 이달 출석: <strong style="color: var(--primary);">${attendedCount}회</strong></span>
+            <span>⏱️ 이달 누적 학습: <strong style="color: var(--success-hover);">${window.formatMinutesToKorean(totalMinutes)}</strong></span>
+            <span>🎯 주당 목표: <strong>${student.weeklyTargetHours || 10}시간</strong></span>
+          </div>
+          ${student.memo ? `<div style="margin-top: 6px; padding-top:6px; border-top:1px dashed #e2e8f0; color: #475569;">💡 ${student.memo}</div>` : ''}
+        </div>
+      </div>
+    `;
+  },
+
+  // 3. 스케줄 편집기 렌더링
+  renderScheduleEditor() {
+    const listContainer = document.getElementById('individualScheduleList');
+    if (!listContainer) return;
+
+    if (!this.tempSchedules || this.tempSchedules.length === 0) {
+      listContainer.innerHTML = `
+        <div style="text-align: center; padding: 14px; color: var(--text-sub); font-size: 0.85rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+          등록된 요일별 수업 시간이 없습니다. 아래에서 요일과 시간을 선택하여 추가해주세요.
+        </div>
+      `;
+      return;
+    }
+
+    const dayOrder = { '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6, '일': 7 };
+    const sorted = [...this.tempSchedules].sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+
+    listContainer.innerHTML = sorted.map((sch, idx) => {
+      // 14:00 -> 오후 2:00 변환 표시
+      const displayTime = this.formatDisplayTime(sch.time);
+      return `
+        <div class="schedule-chip">
+          <span class="schedule-day-badge">${sch.day}요일</span>
+          <span class="schedule-time-text">${sch.time} <small>(${displayTime})</small></span>
+          ${sch.durationMinutes ? `<span class="schedule-duration">${sch.durationMinutes}분</span>` : ''}
+          <button type="button" class="btn-remove-sch" onclick="IndividualAttendanceManager.handleRemoveScheduleItem(${idx})" title="삭제">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      `;
+    }).join('');
+  },
+
+  // 시간 표시 포맷 (14:00 -> 오후 2시)
+  formatDisplayTime(timeStr) {
+    if (!timeStr) return '';
+    const [hStr, mStr] = timeStr.split(':');
+    let h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    const period = h >= 12 ? '오후' : '오전';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return m > 0 ? `${period} ${h}시 ${m}분` : `${period} ${h}시`;
+  },
+
+  // 스케줄 항목 추가
+  handleAddScheduleItem() {
+    const daySelect = document.getElementById('scheduleDaySelect');
+    const timeInput = document.getElementById('scheduleTimeInput');
+    const durationInput = document.getElementById('scheduleDurationInput');
+
+    const day = daySelect ? daySelect.value : '월';
+    const time = timeInput ? timeInput.value : '09:00';
+    const durationMinutes = durationInput ? (parseInt(durationInput.value, 10) || 90) : 90;
+
+    if (!time) {
+      alert('수업 시작 시간을 선택해주세요.');
+      return;
+    }
+
+    // 중복 체크
+    const exists = this.tempSchedules.some(s => s.day === day && s.time === time);
+    if (exists) {
+      alert(`이미 ${day}요일 ${time} 스케줄이 등록되어 있습니다.`);
+      return;
+    }
+
+    this.tempSchedules.push({
+      day,
+      time,
+      durationMinutes
+    });
+
+    this.renderScheduleEditor();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 스케줄 항목 삭제
+  handleRemoveScheduleItem(index) {
+    this.tempSchedules.splice(index, 1);
+    this.renderScheduleEditor();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 스케줄 저장 실행
+  handleSaveSchedules() {
+    if (!this.selectedStudentId) {
+      alert('학생을 먼저 선택해주세요.');
+      return;
+    }
+
+    const student = window.store.getStudentById(this.selectedStudentId);
+    if (!student) return;
+
+    window.store.updateStudentSchedules(this.selectedStudentId, this.tempSchedules);
+    window.showToast?.(`✅ ${student.name} 학생의 시간표(스케줄)가 저장되었습니다.`);
+    
+    this.render();
+    if (window.AttendanceManager) {
+      window.AttendanceManager.render();
+    }
+  },
+
+  // 4. 월간 출석 기록 및 캘린더/리스트 렌더링
+  renderAttendanceHistory() {
+    const container = document.getElementById('individualAttendanceHistoryContainer');
+    const summaryContainer = document.getElementById('individualMonthSummary');
+    if (!container || !summaryContainer) return;
+
+    const student = window.store.getStudentById(this.selectedStudentId);
+    if (!student) {
+      summaryContainer.innerHTML = '';
+      container.innerHTML = '<div class="card text-center" style="padding: 30px; color: var(--text-muted);">학생을 선택해주세요.</div>';
+      return;
+    }
+
+    const [yearStr, monthStr] = this.selectedMonth.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10); // 1-indexed
+
+    // 해당 월의 날짜들 생성
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const studentAtts = window.store.attendances.filter(a => a.studentId === student.id && a.date && a.date.startsWith(this.selectedMonth));
+
+    // 스케줄 요일 매핑
+    const scheduledDays = (student.schedules || []).map(s => s.day);
+
+    let scheduledDaysCount = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${this.selectedMonth}-${String(d).padStart(2, '0')}`;
+      const dayName = DataStore.getDayName(dStr);
+      if (scheduledDays.includes(dayName)) {
+        scheduledDaysCount++;
+      }
+    }
+
+    const presentCount = studentAtts.filter(a => a.status === 'present').length;
+    const lateCount = studentAtts.filter(a => a.status === 'late').length;
+    const earlyLeaveCount = studentAtts.filter(a => a.status === 'early_leave').length;
+    const absentCount = studentAtts.filter(a => a.status === 'absent').length;
+    const supplementCount = studentAtts.filter(a => a.status === 'supplement').length;
+    const attendedTotal = presentCount + lateCount + earlyLeaveCount + supplementCount;
+    const totalMinutes = studentAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+
+    // 월간 요약 카드
+    summaryContainer.innerHTML = `
+      <div class="report-summary-box" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+        <div>
+          <span style="font-size: 0.72rem; opacity: 0.9;">정규 예정일</span>
+          <div style="font-size: 1.35rem; font-weight: 800; margin-top: 2px;">${scheduledDaysCount}일</div>
+        </div>
+        <div style="border-left: 1px solid rgba(255,255,255,0.25); border-right: 1px solid rgba(255,255,255,0.25); padding: 0 14px;">
+          <span style="font-size: 0.72rem; opacity: 0.9;">실제 출석</span>
+          <div style="font-size: 1.35rem; font-weight: 800; margin-top: 2px; color: #4ade80;">${attendedTotal}회</div>
+        </div>
+        <div>
+          <span style="font-size: 0.72rem; opacity: 0.9;">누적 학습</span>
+          <div style="font-size: 1.35rem; font-weight: 800; margin-top: 2px;">${window.formatMinutesToKorean(totalMinutes)}</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; font-size:0.75rem; color:var(--text-muted); padding: 4px 6px;">
+        <span class="badge" style="background:#ecfdf5; color:#059669;">정상 ${presentCount}회</span>
+        ${lateCount > 0 ? `<span class="badge" style="background:#fef3c7; color:#d97706;">지각 ${lateCount}회</span>` : ''}
+        ${absentCount > 0 ? `<span class="badge" style="background:#fee2e2; color:#dc2626;">결석 ${absentCount}회</span>` : ''}
+        ${supplementCount > 0 ? `<span class="badge" style="background:#f3e8ff; color:#7c3aed;">보강 ${supplementCount}회</span>` : ''}
+      </div>
+    `;
+
+    if (this.viewMode === 'calendar') {
+      this.renderCalendarView(container, year, month, daysInMonth, student, studentAtts);
+    } else {
+      this.renderListView(container, year, month, daysInMonth, student, studentAtts);
+    }
+  },
+
+  // 4-A. 캘린더 뷰 렌더링
+  renderCalendarView(container, year, month, daysInMonth, student, studentAtts) {
+    const firstDayIndex = new Date(year, month - 1, 1).getDay(); // 0(일) ~ 6(토)
+    const dayHeaders = ['일', '월', '화', '수', '목', '금', '토'];
+
+    let html = `
+      <div class="calendar-grid-card">
+        <div class="calendar-header-grid">
+          ${dayHeaders.map((d, i) => `<div class="cal-header-cell ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</div>`).join('')}
+        </div>
+        <div class="calendar-days-grid">
+    `;
+
+    // 1일 이전 빈 칸
+    for (let i = 0; i < firstDayIndex; i++) {
+      html += `<div class="cal-day-cell empty"></div>`;
+    }
+
+    const todayStr = window.getTodayString();
+
+    // 1일부터 말일까지
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${this.selectedMonth}-${String(d).padStart(2, '0')}`;
+      const dayOfWeekIndex = new Date(year, month - 1, d).getDay();
+      const dayName = dayHeaders[dayOfWeekIndex];
+      const isToday = (dStr === todayStr);
+
+      // 해당 요일에 정규 스케줄이 있는지
+      const matchingSchedule = (student.schedules || []).find(s => s.day === dayName);
+      // 실제 출결 기록이 있는지
+      const att = studentAtts.find(a => a.date === dStr);
+
+      let cellClass = 'cal-day-cell';
+      if (isToday) cellClass += ' today';
+      if (dayOfWeekIndex === 0) cellClass += ' sun';
+      if (dayOfWeekIndex === 6) cellClass += ' sat';
+      if (matchingSchedule) cellClass += ' scheduled';
+
+      let statusBadge = '';
+      if (att) {
+        let badgeClass = 'badge-present';
+        let statusLabel = '출석';
+        if (att.status === 'late') { badgeClass = 'badge-late'; statusLabel = '지각'; }
+        else if (att.status === 'early_leave') { badgeClass = 'badge-early'; statusLabel = '조퇴'; }
+        else if (att.status === 'absent') { badgeClass = 'badge-absent'; statusLabel = '결석'; }
+        else if (att.status === 'supplement') { badgeClass = 'badge-supplement'; statusLabel = '보강'; }
+
+        const dur = att.durationMinutes ? window.formatMinutesToKorean(att.durationMinutes) : (att.checkIn ? '공부중' : '-');
+        statusBadge = `
+          <div class="cal-att-badge ${badgeClass}" title="${att.checkIn || ''} ~ ${att.checkOut || ''} (${dur})">
+            ${statusLabel} ${att.checkIn ? att.checkIn : ''}
+          </div>
+        `;
+      } else if (matchingSchedule && dStr <= todayStr) {
+        statusBadge = `<div class="cal-att-badge badge-missing">미출석</div>`;
+      }
+
+      html += `
+        <div class="${cellClass}" onclick="IndividualAttendanceManager.openDayAttendanceModal('${student.id}', '${dStr}')">
+          <div class="cal-day-num">${d}</div>
+          ${matchingSchedule ? `<div class="cal-sch-tag">🕒 ${matchingSchedule.time}</div>` : ''}
+          ${statusBadge}
+        </div>
+      `;
+    }
+
+    html += `
+        </div>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin-top:8px;">
+        💡 달력의 날짜를 누르면 해당 일자의 출결 시간을 직접 입력/수정할 수 있습니다.
+      </div>
+    `;
+
+    container.innerHTML = html;
+  },
+
+  // 4-B. 리스트 뷰 렌더링
+  renderListView(container, year, month, daysInMonth, student, studentAtts) {
+    const todayStr = window.getTodayString();
+    let rowsHtml = '';
+
+    for (let d = daysInMonth; d >= 1; d--) {
+      const dStr = `${this.selectedMonth}-${String(d).padStart(2, '0')}`;
+      const dayName = DataStore.getDayName(dStr);
+      const matchingSchedule = (student.schedules || []).find(s => s.day === dayName);
+      const att = studentAtts.find(a => a.date === dStr);
+
+      // 스케줄도 없고 출결 기록도 없는 미래 날짜는 건너뛰거나 표시
+      if (!matchingSchedule && !att && dStr > todayStr) continue;
+
+      let statusBadge = `<span class="badge" style="background:#f1f5f9; color:#94a3b8;">미출석</span>`;
+      let timeText = '-';
+      let durationText = '-';
+
+      if (att) {
+        if (att.status === 'present') statusBadge = `<span class="badge badge-success">정상 출석</span>`;
+        else if (att.status === 'late') statusBadge = `<span class="badge badge-warning">지각</span>`;
+        else if (att.status === 'early_leave') statusBadge = `<span class="badge badge-warning">조퇴</span>`;
+        else if (att.status === 'absent') statusBadge = `<span class="badge badge-danger">결석</span>`;
+        else if (att.status === 'supplement') statusBadge = `<span class="badge badge-purple">보강</span>`;
+
+        timeText = `${att.checkIn || '-'} ~ ${att.checkOut || '-'}`;
+        durationText = att.durationMinutes ? window.formatMinutesToKorean(att.durationMinutes) : (att.checkIn ? '공부중' : '-');
+      } else if (matchingSchedule) {
+        statusBadge = `<span class="badge badge-outline" style="color:var(--primary);">예정일 (${matchingSchedule.time})</span>`;
+      }
+
+      rowsHtml += `
+        <div class="individual-list-row ${att ? 'has-att' : ''}" onclick="IndividualAttendanceManager.openDayAttendanceModal('${student.id}', '${dStr}')">
+          <div class="row-date-box">
+            <span class="row-day">${d}일</span>
+            <span class="row-week">(${dayName})</span>
+          </div>
+          <div class="row-info-box">
+            <div class="row-times">${timeText}</div>
+            <div class="row-sub">
+              ${matchingSchedule ? `<span>스케줄: ${matchingSchedule.time}</span>` : ''}
+              ${durationText !== '-' ? `<span>학습: ${durationText}</span>` : ''}
+            </div>
+            ${att && att.memo ? `<div class="row-memo">📝 ${att.memo}</div>` : ''}
+          </div>
+          <div class="row-status-box">
+            ${statusBadge}
+          </div>
+        </div>
+      `;
+    }
+
+    if (!rowsHtml) {
+      rowsHtml = '<div class="card text-center" style="padding: 24px; color: var(--text-muted);">출결 및 스케줄 기록이 없습니다.</div>';
+    }
+
+    container.innerHTML = `<div class="individual-list-wrap">${rowsHtml}</div>`;
+  },
+
+  // 날짜 클릭 시 출결 수정 모달 열기
+  openDayAttendanceModal(studentId, dateStr) {
+    if (window.AttendanceManager && window.AttendanceManager.openDirectEditModal) {
+      window.AttendanceManager.openDirectEditModal(studentId, dateStr);
+    } else {
+      // 대체 구현: attendanceEditModal 직접 띄우기
+      const student = window.store.getStudentById(studentId);
+      if (!student) return;
+      const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
+
+      const modal = document.getElementById('attendanceEditModal');
+      if (!modal) return;
+
+      document.getElementById('editStudentId').value = student.id;
+      document.getElementById('editDate').value = dateStr;
+      document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
+      document.getElementById('editCheckIn').value = att ? (att.checkIn || '') : '14:00';
+      document.getElementById('editCheckOut').value = att ? (att.checkOut || '') : '16:00';
+      document.getElementById('editStatus').value = att ? (att.status || 'present') : 'present';
+      document.getElementById('editMemo').value = att ? (att.memo || '') : '';
+
+      modal.classList.add('active');
+    }
+  },
+
+  // 개인 출석부 엑셀 다운로드
+  exportExcel() {
+    if (!this.selectedStudentId) {
+      alert('학생을 선택해주세요.');
+      return;
+    }
+    if (window.ExcelManager && window.ExcelManager.exportIndividualMonthlyReport) {
+      window.ExcelManager.exportIndividualMonthlyReport(this.selectedStudentId, this.selectedMonth);
+    } else {
+      alert('엑셀 내보내기 모듈이 준비중입니다.');
+    }
+  }
+};
+
+window.IndividualAttendanceManager = IndividualAttendanceManager;
+
+
+// ==========================================
+
+/**
+ * EduCheck - Student Self Check-in Kiosk Mode
+ * 학생 셀프 출석 키오스크 (전화번호 뒷자리 4자리 키패드)
+ */
+
+const KioskManager = {
+  enteredDigits: '',
+
+  init() {
+    this.bindEvents();
+    this.updateDisplay();
+  },
+
+  bindEvents() {
+    // 키패드 숫자 버튼
+    const numKeys = document.querySelectorAll('.keypad-grid .num-key');
+    numKeys.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const digit = e.currentTarget.dataset.digit;
+        this.addDigit(digit);
+      });
+    });
+
+    // 지우기 버튼
+    const backBtn = document.getElementById('kioskBackspace');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        this.removeDigit();
+      });
+    }
+
+    // 전체 삭제 버튼
+    const clearBtn = document.getElementById('kioskClear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearAll();
+      });
+    }
+  },
+
+  addDigit(digit) {
+    if (this.enteredDigits.length < 4) {
+      this.enteredDigits += digit;
+      this.updateDisplay();
+
+      // 4자리가 다 찼을 때 자동 학생 검색
+      if (this.enteredDigits.length === 4) {
+        setTimeout(() => {
+          this.searchAndPromptStudent(this.enteredDigits);
+        }, 150);
+      }
+    }
+  },
+
+  removeDigit() {
+    if (this.enteredDigits.length > 0) {
+      this.enteredDigits = this.enteredDigits.slice(0, -1);
+      this.updateDisplay();
+    }
+  },
+
+  clearAll() {
+    this.enteredDigits = '';
+    this.updateDisplay();
+  },
+
+  updateDisplay() {
+    const slots = document.querySelectorAll('.kiosk-display .digit-slot');
+    slots.forEach((slot, index) => {
+      if (index < this.enteredDigits.length) {
+        slot.textContent = this.enteredDigits[index];
+        slot.classList.add('filled');
+      } else {
+        slot.textContent = '·';
+        slot.classList.remove('filled');
+      }
+    });
+  },
+
+  searchAndPromptStudent(last4) {
+    const matchedStudents = window.store.findStudentsByLast4(last4);
+
+    if (matchedStudents.length === 0) {
+      alert(`뒷자리 [${last4}] 번호로 등록된 학생을 찾을 수 없습니다.\n선생님께 문의해주세요.`);
+      this.clearAll();
+      return;
+    }
+
+    if (matchedStudents.length === 1) {
+      this.showCheckPrompt(matchedStudents[0]);
+    } else {
+      // 2명 이상 매칭된 경우 선택 목록 모달
+      this.showMultipleStudentChoice(matchedStudents);
+    }
+  },
+
+  // 출석/퇴실 확인 팝업
+  showCheckPrompt(student) {
+    const today = window.getTodayString();
+    const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
+    const isFinished = att && att.checkIn && att.checkOut && att.status !== 'absent';
+
+    const modal = document.getElementById('kioskConfirmModal');
+    if (!modal) return;
+
+    document.getElementById('kioskStudentName').textContent = student.name;
+    document.getElementById('kioskStudentInfo').textContent = `${student.level} ${student.grade || ''}`;
+
+    const actionContainer = document.getElementById('kioskActionButtons');
+    if (!isStudying) {
+      const nextSession = isFinished ? (att.sessions?.length || 1) + 1 : 1;
+      const btnText = isFinished ? `${nextSession}차 [다시 입실 (등원)] 하기` : '지금 [입실 (등원)] 하기';
+      const prevInfo = isFinished ? `
+        <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:0.82rem; color:var(--text-muted);">
+          ℹ️ 오늘 이전 수업: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> 학습 완료
+        </div>
+      ` : '';
+
+      actionContainer.innerHTML = `
+        ${prevInfo}
+        <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
+          <i data-lucide="log-in"></i> ${btnText}
+        </button>
+      `;
+    } else {
+      const nowTime = window.getCurrentTimeString();
+      const mins = window.calculateDurationMinutes(att.checkIn, nowTime);
+      const sNum = att.sessions?.length || 1;
+      const sText = sNum > 1 ? `${sNum}차 ` : '';
+      const totalAccum = (att.durationMinutes || 0) + mins;
+
+      actionContainer.innerHTML = `
+        <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.88rem;">
+          ${sText}등원시간: <strong>${att.checkIn}</strong><br>
+          현재 세션 학습: <strong style="color:var(--primary);">${window.formatMinutesToKorean(mins)}</strong>
+          ${sNum > 1 ? `<br>오늘 총 누적 예상: <strong>${window.formatMinutesToKorean(totalAccum)}</strong>` : ''}
+        </div>
+        <button class="btn btn-danger btn-lg btn-full" onclick="KioskManager.executeCheckOut('${student.id}')">
+          <i data-lucide="log-out"></i> ${sText}공부 마치고 [퇴실 (하원)] 하기
+        </button>
+      `;
+    }
+
+    modal.classList.add('active');
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  showMultipleStudentChoice(students) {
+    const modal = document.getElementById('kioskConfirmModal');
+    if (!modal) return;
+
+    document.getElementById('kioskStudentName').textContent = '학생을 선택하세요';
+    document.getElementById('kioskStudentInfo').textContent = `동일한 뒷번호 학생 ${students.length}명`;
+
+    const actionContainer = document.getElementById('kioskActionButtons');
+    let listHtml = '<div style="display:flex; flex-direction:column; gap:8px;">';
+    students.forEach(s => {
+      listHtml += `
+        <button class="btn btn-outline btn-full" style="padding:12px; justify-content:space-between;" onclick="KioskManager.showCheckPrompt(window.store.getStudentById('${s.id}'))">
+          <strong>${s.name}</strong>
+          <span style="font-size:0.8rem; color:var(--text-muted);">${s.level} ${s.grade || ''}</span>
+        </button>
+      `;
+    });
+    listHtml += '</div>';
+
+    actionContainer.innerHTML = listHtml;
+    modal.classList.add('active');
+  },
+
+  executeCheckIn(studentId) {
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.checkInStudent(studentId);
+    
+    this.closeConfirmModal();
+    this.clearAll();
+    
+    // 축하 토스트 및 메시지
+    window.showToast?.(`🎉 ${student.name} 학생 입실 완료 (${att.checkIn})! 열공하세요!`);
+
+    // 출석 뷰가 있으면 동기화
+    if (window.AttendanceManager) {
+      window.AttendanceManager.render();
+    }
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  executeCheckOut(studentId) {
+    const student = window.store.getStudentById(studentId);
+    const att = window.store.checkOutStudent(studentId);
+    const durStr = window.formatMinutesToKorean(att.durationMinutes);
+
+    this.closeConfirmModal();
+    this.clearAll();
+
+    window.showToast?.(`👋 ${student.name} 학생 퇴실 완료! 오늘 총 학습: ${durStr}`);
+
+    if (window.AttendanceManager) {
+      window.AttendanceManager.render();
+    }
+    if (window.IndividualAttendanceManager) {
+      window.IndividualAttendanceManager.render();
+    }
+  },
+
+  closeConfirmModal() {
+    const modal = document.getElementById('kioskConfirmModal');
+    if (modal) modal.classList.remove('active');
+    this.clearAll();
+  }
+};
+
+window.KioskManager = KioskManager;
+
+
+// ==========================================
 
 /**
  * EduCheck - Excel Import / Export Module (SheetJS XLSX Integration)
@@ -2203,917 +4377,131 @@ const ExcelManager = {
       }
     };
     reader.readAsArrayBuffer(file);
+  },
+
+  // 5. 학생 개인별 월간 출석부 엑셀 내보내기
+  exportIndividualMonthlyReport(studentId, yearMonth = null) {
+    if (typeof XLSX === 'undefined') {
+      alert('엑셀 라이브러리가 로드되지 않았습니다.');
+      return;
+    }
+
+    const student = window.store.getStudentById(studentId);
+    if (!student) {
+      alert('학생 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!yearMonth) {
+      yearMonth = window.getTodayString().slice(0, 7);
+    }
+
+    const [yearStr, monthStr] = yearMonth.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const studentAtts = window.store.attendances.filter(a => a.studentId === student.id && a.date && a.date.startsWith(yearMonth));
+    const schSummary = DataStore.formatScheduleText(student.schedules) || '미설정';
+
+    const rows = [
+      [`공부방 학생 개인 출석부 (${year}년 ${month}월)`],
+      [`학생명: ${student.name} (${student.level} ${student.grade || ''})`, `연락처: ${student.phone || student.parentPhone || '-'}`, `정규 시간표: ${schSummary}`],
+      [],
+      ['일자', '요일', '스케줄(예정)', '입실시간', '퇴실시간', '학습시간', '출결상태', '비고/사유']
+    ];
+
+    let totalMinutes = 0;
+    let attendedCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    let supplementCount = 0;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${yearMonth}-${String(d).padStart(2, '0')}`;
+      const dayName = DataStore.getDayName(dStr);
+      const matchingSchedule = (student.schedules || []).find(s => s.day === dayName);
+      const att = studentAtts.find(a => a.date === dStr);
+
+      const schText = matchingSchedule ? `${matchingSchedule.time} (${matchingSchedule.durationMinutes || 90}분)` : '-';
+      let checkIn = '-';
+      let checkOut = '-';
+      let durationStr = '-';
+      let statusKr = matchingSchedule ? '미출석' : '-';
+      let memo = '';
+
+      if (att) {
+        checkIn = att.checkIn || '-';
+        checkOut = att.checkOut || (att.checkIn ? '학습중' : '-');
+        
+        if (att.status === 'present') { statusKr = '정상출석'; attendedCount++; }
+        else if (att.status === 'late') { statusKr = '지각'; attendedCount++; lateCount++; }
+        else if (att.status === 'early_leave') { statusKr = '조퇴'; attendedCount++; }
+        else if (att.status === 'absent') { statusKr = '결석'; absentCount++; }
+        else if (att.status === 'supplement') { statusKr = '보강'; attendedCount++; supplementCount++; }
+
+        if (att.durationMinutes > 0) {
+          totalMinutes += att.durationMinutes;
+          durationStr = window.formatMinutesToKorean(att.durationMinutes);
+        }
+        memo = att.memo || '';
+      }
+
+      rows.push([
+        `${d}일`,
+        dayName,
+        schText,
+        checkIn,
+        checkOut,
+        durationStr,
+        statusKr,
+        memo
+      ]);
+    }
+
+    // 통계 요약 행
+    rows.push([]);
+    rows.push(['[월간 출결 요약]']);
+    rows.push(['총 출석일수', `${attendedCount}일`, '총 학습시간', window.formatMinutesToKorean(totalMinutes), '지각', `${lateCount}회`, '결석', `${absentCount}회`]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },  // 일자
+      { wch: 6 },  // 요일
+      { wch: 18 }, // 스케줄
+      { wch: 12 }, // 입실시간
+      { wch: 12 }, // 퇴실시간
+      { wch: 14 }, // 학습시간
+      { wch: 12 }, // 상태
+      { wch: 25 }  // 비고
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `${student.name}_${month}월출석부`);
+
+    const fileName = `${student.name}_개인출석부_${yearMonth}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    window.showToast?.(`✅ ${fileName} 다운로드가 완료되었습니다.`);
   }
 };
 
 window.ExcelManager = ExcelManager;
 
 
-/**
- * EduCheck - Student Management Module
- * 학생 목록 조회, 필터링, 신규 등록, 수정, 삭제 로직
- */
-
-const StudentsManager = {
-  currentFilter: 'all', // 'all', '초등', '중등', '고등'
-  searchKeyword: '',
-
-  init() {
-    this.bindEvents();
-    this.render();
-  },
-
-  bindEvents() {
-    // 1. 초/중/고 필터 칩 클릭
-    const filterChips = document.querySelectorAll('#studentFilterChips .chip');
-    filterChips.forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        filterChips.forEach(c => c.classList.remove('active'));
-        e.target.classList.add('active');
-        this.currentFilter = e.target.dataset.filter;
-        this.render();
-      });
-    });
-
-    // 2. 검색 입력
-    const searchInput = document.getElementById('studentSearchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        this.searchKeyword = e.target.value.trim().toLowerCase();
-        this.render();
-      });
-    }
-
-    // 3. 학생 등록 폼 제출
-    const studentForm = document.getElementById('studentForm');
-    if (studentForm) {
-      studentForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleSaveStudent();
-      });
-    }
-  },
-
-  render() {
-    const container = document.getElementById('studentListContainer');
-    if (!container) return;
-
-    let students = window.store.getStudents();
-
-    // 1. 구분(초/중/고) 필터링
-    if (this.currentFilter !== 'all') {
-      students = students.filter(s => s.level === this.currentFilter);
-    }
-
-    // 2. 검색어 필터링
-    if (this.searchKeyword) {
-      students = students.filter(s => 
-        s.name.toLowerCase().includes(this.searchKeyword) ||
-        (s.phone && s.phone.includes(this.searchKeyword)) ||
-        (s.parentPhone && s.parentPhone.includes(this.searchKeyword)) ||
-        (s.grade && s.grade.toLowerCase().includes(this.searchKeyword))
-      );
-    }
-
-    // 학생 수 배지 업데이트
-    const countBadge = document.getElementById('studentTotalCount');
-    if (countBadge) countBadge.textContent = `${students.length}명`;
-
-    if (students.length === 0) {
-      container.innerHTML = `
-        <div class="card text-center" style="padding: 40px 20px;">
-          <p style="color: var(--text-muted); font-size: 0.95rem;">등록된 학생이 없거나 조건에 맞는 학생이 없습니다.</p>
-          <button class="btn btn-primary btn-sm" style="margin: 14px auto 0 auto;" onclick="StudentsManager.openAddModal()">
-            <i data-lucide="user-plus"></i> 학생 새로 등록
-          </button>
-        </div>
-      `;
-      if (window.lucide) window.lucide.createIcons();
-      return;
-    }
-
-    let html = '';
-    students.forEach(std => {
-      const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
-      const initial = std.name ? std.name.slice(0, 1) : '?';
-      
-      // 누적 학습 시간 계산
-      const allAtts = window.store.attendances.filter(a => a.studentId === std.id);
-      const totalMinutes = allAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
-      const attendanceDays = allAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
-
-      html += `
-        <div class="student-card">
-          <div class="student-card-top">
-            <div class="student-profile">
-              <div class="student-avatar ${avatarClass}">${initial}</div>
-              <div class="student-meta">
-                <h3>
-                  ${std.name}
-                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
-                </h3>
-                <div class="sub-info">
-                  <span>📱 ${std.parentPhone ? '학부모: ' + std.parentPhone : (std.phone || '연락처 없음')}</span>
-                </div>
-              </div>
-            </div>
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="StudentsManager.openEditModal('${std.id}')" title="수정">
-              <i data-lucide="more-vertical"></i>
-            </button>
-          </div>
-
-          <div style="font-size: 0.8rem; color: var(--text-muted); background: #f8fafc; padding: 8px 12px; border-radius: var(--radius-sm);">
-            <div class="flex-between">
-              <span>📅 누적 출석: <strong>${attendanceDays}일</strong></span>
-              <span>⏱️ 총 학습: <strong>${window.formatMinutesToKorean(totalMinutes)}</strong></span>
-            </div>
-            ${std.memo ? `<div style="margin-top: 4px; color: #475569;">💡 ${std.memo}</div>` : ''}
-          </div>
-
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-outline btn-sm btn-full" onclick="StudentsManager.openEditModal('${std.id}')">
-              <i data-lucide="edit-3"></i> 정보 수정
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="StudentsManager.deleteStudent('${std.id}', '${std.name}')">
-              <i data-lucide="trash-2"></i> 삭제
-            </button>
-          </div>
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
-    if (window.lucide) window.lucide.createIcons();
-  },
-
-  // 학생 등록 모달 열기
-  openAddModal() {
-    const modal = document.getElementById('studentModal');
-    const form = document.getElementById('studentForm');
-    if (!modal || !form) return;
-
-    form.reset();
-    document.getElementById('modalStudentId').value = '';
-    document.getElementById('studentModalTitle').textContent = '새 학생 등록';
-    modal.classList.add('active');
-  },
-
-  // 학생 수정 모달 열기
-  openEditModal(id) {
-    const student = window.store.getStudentById(id);
-    if (!student) return;
-
-    const modal = document.getElementById('studentModal');
-    if (!modal) return;
-
-    document.getElementById('studentModalTitle').textContent = '학생 정보 수정';
-    document.getElementById('modalStudentId').value = student.id;
-    document.getElementById('modalStudentName').value = student.name;
-    document.getElementById('modalStudentLevel').value = student.level || '초등';
-    document.getElementById('modalStudentGrade').value = student.grade || '';
-    document.getElementById('modalStudentPhone').value = student.phone || '';
-    document.getElementById('modalParentPhone').value = student.parentPhone || '';
-    document.getElementById('modalTargetHours').value = student.weeklyTargetHours || 10;
-    document.getElementById('modalStudentMemo').value = student.memo || '';
-
-    modal.classList.add('active');
-  },
-
-  // 모달 닫기
-  closeModal() {
-    const modal = document.getElementById('studentModal');
-    if (modal) modal.classList.remove('active');
-  },
-
-  // 저장 (추가 또는 수정)
-  handleSaveStudent() {
-    const id = document.getElementById('modalStudentId').value;
-    const name = document.getElementById('modalStudentName').value.trim();
-    const level = document.getElementById('modalStudentLevel').value;
-    const grade = document.getElementById('modalStudentGrade').value.trim();
-    const phone = document.getElementById('modalStudentPhone').value.trim();
-    const parentPhone = document.getElementById('modalParentPhone').value.trim();
-    const weeklyTargetHours = Number(document.getElementById('modalTargetHours').value) || 10;
-    const memo = document.getElementById('modalStudentMemo').value.trim();
-
-    if (!name) {
-      alert('학생 이름을 입력해주세요.');
-      return;
-    }
-
-    const data = {
-      name,
-      level,
-      grade,
-      phone,
-      parentPhone,
-      weeklyTargetHours,
-      memo
-    };
-
-    if (id) {
-      window.store.updateStudent(id, data);
-      window.showToast?.(`✅ ${name} 학생 정보가 수정되었습니다.`);
-    } else {
-      window.store.addStudent(data);
-      window.showToast?.(`🎉 ${name} 학생이 새로 등록되었습니다.`);
-    }
-
-    this.closeModal();
-    this.render();
-    if (window.AttendanceManager) {
-      window.AttendanceManager.render();
-    }
-  },
-
-  // 학생 삭제
-  deleteStudent(id, name) {
-    if (confirm(`'${name}' 학생을 삭제하시겠습니까?\n(등록된 출결 기록도 모두 삭제됩니다)`)) {
-      window.store.deleteStudent(id);
-      window.showToast?.(`🗑️ ${name} 학생이 삭제되었습니다.`);
-      this.render();
-      if (window.AttendanceManager) {
-        window.AttendanceManager.render();
-      }
-    }
-  }
-};
-
-window.StudentsManager = StudentsManager;
-
-
-/**
- * EduCheck - Attendance Management Module
- * 실시간 출석/입퇴실 관리, 재실 현황 대시보드, 유동 시간 계산
- */
-
-const AttendanceManager = {
-  selectedDate: window.getTodayString(),
-  levelFilter: 'all', // 'all', '초등', '중등', '고등'
-  statusFilter: 'all', // 'all', 'studying', 'finished', 'not_attended', 'absent'
-  searchKeyword: '',
-  timerInterval: null,
-
-  init() {
-    this.bindEvents();
-    this.startLiveTimer();
-    this.render();
-  },
-
-  bindEvents() {
-    // 1. 날짜 변경 이벤트
-    const dateInput = document.getElementById('attendanceDateInput');
-    if (dateInput) {
-      dateInput.value = this.selectedDate;
-      dateInput.addEventListener('change', (e) => {
-        this.selectedDate = e.target.value;
-        this.render();
-      });
-    }
-
-    // 2. 초/중/고 학교급 탭 클릭
-    const levelTabs = document.querySelectorAll('#attendanceLevelTabs .level-tab-btn');
-    levelTabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        levelTabs.forEach(t => t.classList.remove('active'));
-        const btn = e.currentTarget;
-        btn.classList.add('active');
-        this.levelFilter = btn.dataset.level;
-        this.render();
-      });
-    });
-
-    // 3. 상태 필터 칩 클릭
-    const filterChips = document.querySelectorAll('#attendanceFilterChips .chip');
-    filterChips.forEach(chip => {
-      chip.addEventListener('click', (e) => {
-        filterChips.forEach(c => c.classList.remove('active'));
-        e.target.classList.add('active');
-        this.statusFilter = e.target.dataset.status;
-        this.render();
-      });
-    });
-
-    // 4. 출석 검색창
-    const searchInput = document.getElementById('attendanceSearchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        this.searchKeyword = e.target.value.trim().toLowerCase();
-        this.render();
-      });
-    }
-
-    // 5. 출석 수정 폼 제출
-    const form = document.getElementById('attendanceEditForm');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.handleSaveAttendanceEdit();
-      });
-    }
-  },
-
-  // 1분마다 재실 학생 경과시간 갱신
-  startLiveTimer() {
-    if (this.timerInterval) clearInterval(this.timerInterval);
-    this.timerInterval = setInterval(() => {
-      // 오늘 날짜를 보고 있을 때만 렌더링 업데이트
-      if (this.selectedDate === window.getTodayString()) {
-        this.updateLiveDurations();
-      }
-    }, 30000); // 30초마다 갱신
-  },
-
-  updateLiveDurations() {
-    const liveBadges = document.querySelectorAll('[data-live-checkin]');
-    const currentNow = window.getCurrentTimeString();
-    liveBadges.forEach(badge => {
-      const checkInTime = badge.dataset.liveCheckin;
-      if (checkInTime) {
-        const mins = window.calculateDurationMinutes(checkInTime, currentNow);
-        badge.textContent = `🔥 ${window.formatMinutesToKorean(mins)} 학습중`;
-      }
-    });
-  },
-
-  render() {
-    this.renderDashboardStats();
-    this.renderAttendanceList();
-  },
-
-  // 상단 대시보드 통계 카드 및 학교급별 탭 뱃지 갱신
-  renderDashboardStats() {
-    const students = window.store.getStudents();
-    const attendances = window.store.getAttendancesByDate(this.selectedDate);
-
-    const totalStudents = students.length;
-    let studyingCount = 0;
-    let finishedCount = 0;
-    let absentCount = 0;
-
-    // 학교급별 인원 및 재실 카운트
-    const levelStats = {
-      초등: { total: 0, studying: 0 },
-      중등: { total: 0, studying: 0 },
-      고등: { total: 0, studying: 0 }
-    };
-
-    students.forEach(s => {
-      if (levelStats[s.level]) {
-        levelStats[s.level].total++;
-      }
-    });
-
-    attendances.forEach(att => {
-      const std = students.find(s => s.id === att.studentId);
-      const isStudying = att.checkIn && !att.checkOut && att.status !== 'absent';
-
-      if (isStudying) {
-        studyingCount++;
-        if (std && levelStats[std.level]) {
-          levelStats[std.level].studying++;
-        }
-      } else if (att.checkIn && att.checkOut) {
-        finishedCount++;
-      } else if (att.status === 'absent') {
-        absentCount++;
-      }
-    });
-
-    const notAttendedCount = Math.max(0, totalStudents - studyingCount - finishedCount - absentCount);
-
-    // 대시보드 히어로 숫자 업데이트
-    const totalEl = document.getElementById('statTotalStudents');
-    const studyingEl = document.getElementById('statStudying');
-    const finishedEl = document.getElementById('statFinished');
-
-    if (totalEl) totalEl.textContent = `${totalStudents}명`;
-    if (studyingEl) studyingEl.textContent = `${studyingCount}명`;
-    if (finishedEl) finishedEl.textContent = `${finishedCount}명`;
-
-    // 학교급 세그먼트 탭 뱃지 업데이트
-    const countAllEl = document.getElementById('levelCountAll');
-    const countElemEl = document.getElementById('levelCountElem');
-    const countMiddleEl = document.getElementById('levelCountMiddle');
-    const countHighEl = document.getElementById('levelCountHigh');
-
-    if (countAllEl) countAllEl.textContent = `재실 ${studyingCount}/${totalStudents}`;
-    if (countElemEl) countElemEl.textContent = `재실 ${levelStats['초등'].studying}/${levelStats['초등'].total}`;
-    if (countMiddleEl) countMiddleEl.textContent = `재실 ${levelStats['중등'].studying}/${levelStats['중등'].total}`;
-    if (countHighEl) countHighEl.textContent = `재실 ${levelStats['고등'].studying}/${levelStats['고등'].total}`;
-  },
-
-  // 학생별 출석 카드 리스트
-  renderAttendanceList() {
-    const container = document.getElementById('attendanceListContainer');
-    if (!container) return;
-
-    let students = window.store.getStudents();
-    const attendances = window.store.getAttendancesByDate(this.selectedDate);
-
-    // 1. 초/중/고 학교급 필터
-    if (this.levelFilter !== 'all') {
-      students = students.filter(s => s.level === this.levelFilter);
-    }
-
-    // 2. 검색어 필터
-    if (this.searchKeyword) {
-      students = students.filter(s => 
-        s.name.toLowerCase().includes(this.searchKeyword) ||
-        (s.phone && s.phone.includes(this.searchKeyword)) ||
-        (s.grade && s.grade.includes(this.searchKeyword))
-      );
-    }
-
-    // 3. 상태 필터 (공부중, 하원완료 등)
-    if (this.statusFilter !== 'all') {
-      students = students.filter(std => {
-        const att = attendances.find(a => a.studentId === std.id);
-        if (this.statusFilter === 'studying') {
-          return att && att.checkIn && !att.checkOut && att.status !== 'absent';
-        } else if (this.statusFilter === 'finished') {
-          return att && att.checkIn && att.checkOut;
-        } else if (this.statusFilter === 'not_attended') {
-          return !att || (!att.checkIn && att.status !== 'absent');
-        } else if (this.statusFilter === 'absent') {
-          return att && att.status === 'absent';
-        }
-        return true;
-      });
-    }
-
-    if (students.length === 0) {
-      const levelName = this.levelFilter === 'all' ? '' : `[${this.levelFilter}부] `;
-      container.innerHTML = `
-        <div class="card text-center" style="padding: 35px 20px;">
-          <p style="color: var(--text-muted); font-size: 0.92rem;">${levelName}해당 조건의 학생/출석 데이터가 없습니다.</p>
-        </div>
-      `;
-      return;
-    }
-
-    let html = '';
-    const nowTime = window.getCurrentTimeString();
-
-    students.forEach(std => {
-      const att = attendances.find(a => a.studentId === std.id);
-      const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
-      const initial = std.name ? std.name.slice(0, 1) : '?';
-
-      const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
-      const isFinished = att && att.checkIn && att.checkOut;
-      const isAbsent = att && att.status === 'absent';
-
-      let statusBadge = `<span class="badge badge-left">미출석</span>`;
-      if (isStudying) {
-        statusBadge = `<span class="badge badge-present">🔥 재실 중 (학습중)</span>`;
-      } else if (isFinished) {
-        statusBadge = `<span class="badge badge-left">✅ 하원 완료</span>`;
-      } else if (isAbsent) {
-        statusBadge = `<span class="badge badge-absent">결석</span>`;
-      } else if (att?.status === 'late') {
-        statusBadge = `<span class="badge badge-late">지각</span>`;
-      } else if (att?.status === 'supplement') {
-        statusBadge = `<span class="badge badge-supplement">보강</span>`;
-      }
-
-      // 학습 시간 계산
-      let durationDisplay = '-';
-      if (isFinished && att.durationMinutes > 0) {
-        durationDisplay = window.formatMinutesToKorean(att.durationMinutes);
-      } else if (isStudying && att.checkIn) {
-        const dur = window.calculateDurationMinutes(att.checkIn, nowTime);
-        durationDisplay = `<span data-live-checkin="${att.checkIn}">🔥 ${window.formatMinutesToKorean(dur)} 학습중</span>`;
-      }
-
-      html += `
-        <div class="student-card ${isStudying ? 'is-studying' : ''}">
-          <div class="student-card-top">
-            <div class="student-profile">
-              <div class="student-avatar ${avatarClass}">${initial}</div>
-              <div class="student-meta">
-                <h3>
-                  ${std.name}
-                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
-                </h3>
-                <div class="sub-info">
-                  ${statusBadge}
-                  ${att?.memo ? `<span style="color: #6366f1; font-weight: 500;">· 💬 ${att.memo}</span>` : ''}
-                </div>
-              </div>
-            </div>
-
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openEditModal('${std.id}')" title="출석/시간 직접 수정">
-              <i data-lucide="sliders"></i>
-            </button>
-          </div>
-
-          <!-- 입/퇴실 시간 및 학습시간 정보 바 -->
-          <div class="attendance-time-bar">
-            <div class="time-item">
-              <span class="time-label">등원(입실)</span>
-              <span class="time-val">${att?.checkIn || '-'}</span>
-            </div>
-            <div class="time-item">
-              <span class="time-label">하원(퇴실)</span>
-              <span class="time-val">${att?.checkOut || '-'}</span>
-            </div>
-            <div class="time-item" style="text-align: right;">
-              <span class="time-label">총 학습시간</span>
-              <span class="study-duration">${durationDisplay}</span>
-            </div>
-          </div>
-
-          <!-- 빠른 액션 버튼 행 -->
-          <div class="card-action-row">
-            ${!isStudying ? `
-              <button class="btn btn-success btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')">
-                <i data-lucide="log-in"></i> 입실 (등원)
-              </button>
-            ` : `
-              <button class="btn btn-danger btn-sm" onclick="AttendanceManager.quickCheckOut('${std.id}')">
-                <i data-lucide="log-out"></i> 퇴실 (하원)
-              </button>
-            `}
-
-            <button class="btn btn-outline btn-sm" onclick="AttendanceManager.openNotificationModal('${std.id}')">
-              <i data-lucide="message-square"></i> 안심문자
-            </button>
-
-            <button class="btn btn-ghost btn-icon btn-sm" onclick="AttendanceManager.openStatusSheet('${std.id}')" title="상태 변경">
-              <i data-lucide="more-horizontal"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
-    if (window.lucide) window.lucide.createIcons();
-  },
-
-  // 원터치 입실
-  quickCheckIn(studentId) {
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.checkInStudent(studentId, null, this.selectedDate);
-    window.showToast?.(`🚪 ${student?.name || '학생'} 입실 처리되었습니다. (${att.checkIn})`);
-    this.render();
-  },
-
-  // 원터치 퇴실
-  quickCheckOut(studentId) {
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.checkOutStudent(studentId, null, this.selectedDate);
-    const durStr = window.formatMinutesToKorean(att.durationMinutes);
-    window.showToast?.(`👋 ${student?.name || '학생'} 퇴실 완료 (${att.checkOut}, 학습: ${durStr})`);
-    this.render();
-  },
-
-  // 출석 상세 수정 모달 열기
-  openEditModal(studentId) {
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
-    if (!student) return;
-
-    const modal = document.getElementById('attendanceEditModal');
-    if (!modal) return;
-
-    document.getElementById('editStudentId').value = student.id;
-    document.getElementById('editStudentName').textContent = `${student.name} (${student.level} ${student.grade})`;
-    document.getElementById('editDate').value = this.selectedDate;
-    document.getElementById('editCheckIn').value = att?.checkIn || '';
-    document.getElementById('editCheckOut').value = att?.checkOut || '';
-    document.getElementById('editStatus').value = att?.status || 'present';
-    document.getElementById('editMemo').value = att?.memo || '';
-
-    modal.classList.add('active');
-  },
-
-  closeEditModal() {
-    const modal = document.getElementById('attendanceEditModal');
-    if (modal) modal.classList.remove('active');
-  },
-
-  handleSaveAttendanceEdit() {
-    const studentId = document.getElementById('editStudentId').value;
-    const checkIn = document.getElementById('editCheckIn').value.trim() || null;
-    const checkOut = document.getElementById('editCheckOut').value.trim() || null;
-    const status = document.getElementById('editStatus').value;
-    const memo = document.getElementById('editMemo').value.trim();
-
-    let att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
-    if (!att) {
-      att = {
-        id: 'att-' + Date.now(),
-        studentId,
-        date: this.selectedDate,
-        checkIn,
-        checkOut,
-        status,
-        durationMinutes: 0,
-        memo
-      };
-      if (checkIn && checkOut) {
-        att.durationMinutes = window.calculateDurationMinutes(checkIn, checkOut);
-      }
-      window.store.attendances.push(att);
-      window.store.saveAttendances();
-    } else {
-      window.store.updateAttendanceRecord(att.id, {
-        checkIn,
-        checkOut,
-        status,
-        memo
-      });
-    }
-
-    window.showToast?.('💾 출결 정보가 저장되었습니다.');
-    this.closeEditModal();
-    this.render();
-  },
-
-  // 상태 빠른 변경 시트 (보강, 지각, 결석 등)
-  openStatusSheet(studentId) {
-    const student = window.store.getStudentById(studentId);
-    if (!student) return;
-    
-    const action = prompt(`[${student.name}] 상태를 선택해주세요:\n1. 정상출석\n2. 지각\n3. 결석\n4. 보강수업\n5. 초기화(삭제)\n(번호 1~5 입력)`);
-    if (!action) return;
-
-    if (action === '1') {
-      window.store.setAttendanceStatus(studentId, 'present', this.selectedDate);
-    } else if (action === '2') {
-      const memo = prompt('지각 사유 메모(선택):', '');
-      window.store.setAttendanceStatus(studentId, 'late', this.selectedDate, memo || '지각');
-    } else if (action === '3') {
-      const memo = prompt('결석 사유 메모(선택):', '');
-      window.store.setAttendanceStatus(studentId, 'absent', this.selectedDate, memo || '결석');
-    } else if (action === '4') {
-      const memo = prompt('보강 내용/시간(선택):', '주말 보강');
-      window.store.setAttendanceStatus(studentId, 'supplement', this.selectedDate, memo);
-    } else if (action === '5') {
-      const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
-      if (att) {
-        window.store.attendances = window.store.attendances.filter(a => a.id !== att.id);
-        window.store.saveAttendances();
-        window.showToast?.('출결 기록이 초기화되었습니다.');
-      }
-    }
-    this.render();
-  },
-
-  // 안심 문자 모달 열기
-  openNotificationModal(studentId) {
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
-    if (!student) return;
-
-    const modal = document.getElementById('notificationModal');
-    if (!modal) return;
-
-    const isFinished = att && att.checkIn && att.checkOut;
-    const type = isFinished ? 'checkOut' : (att?.checkIn ? 'checkIn' : 'status');
-
-    const msg = window.NotificationManager.createMessage(student, att, type);
-
-    document.getElementById('notifStudentName').textContent = student.name;
-    document.getElementById('notifParentPhone').textContent = student.parentPhone || '연락처 미등록';
-    document.getElementById('notifMessagePreview').value = msg;
-    document.getElementById('notifTargetPhone').value = student.parentPhone || '';
-
-    // 모달 데이터 속성에 저장
-    modal.dataset.studentId = studentId;
-    modal.dataset.date = this.selectedDate;
-
-    modal.classList.add('active');
-  },
-
-  closeNotificationModal() {
-    const modal = document.getElementById('notificationModal');
-    if (modal) modal.classList.remove('active');
-  },
-
-  // 모달 내에서 메시지 타입 변경 (등원/하원/출결변동)
-  changeNotificationType(type) {
-    const modal = document.getElementById('notificationModal');
-    const studentId = modal.dataset.studentId;
-    const dateStr = modal.dataset.date;
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.getTodayAttendanceForStudent(studentId, dateStr);
-
-    const msg = window.NotificationManager.createMessage(student, att, type);
-    document.getElementById('notifMessagePreview').value = msg;
-  }
-};
-
-window.AttendanceManager = AttendanceManager;
-
-
-/**
- * EduCheck - Student Self Check-in Kiosk Mode
- * 학생 셀프 출석 키오스크 (전화번호 뒷자리 4자리 키패드)
- */
-
-const KioskManager = {
-  enteredDigits: '',
-
-  init() {
-    this.bindEvents();
-    this.updateDisplay();
-  },
-
-  bindEvents() {
-    // 키패드 숫자 버튼
-    const numKeys = document.querySelectorAll('.keypad-grid .num-key');
-    numKeys.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const digit = e.currentTarget.dataset.digit;
-        this.addDigit(digit);
-      });
-    });
-
-    // 지우기 버튼
-    const backBtn = document.getElementById('kioskBackspace');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => {
-        this.removeDigit();
-      });
-    }
-
-    // 전체 삭제 버튼
-    const clearBtn = document.getElementById('kioskClear');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        this.clearAll();
-      });
-    }
-  },
-
-  addDigit(digit) {
-    if (this.enteredDigits.length < 4) {
-      this.enteredDigits += digit;
-      this.updateDisplay();
-
-      // 4자리가 다 찼을 때 자동 학생 검색
-      if (this.enteredDigits.length === 4) {
-        setTimeout(() => {
-          this.searchAndPromptStudent(this.enteredDigits);
-        }, 150);
-      }
-    }
-  },
-
-  removeDigit() {
-    if (this.enteredDigits.length > 0) {
-      this.enteredDigits = this.enteredDigits.slice(0, -1);
-      this.updateDisplay();
-    }
-  },
-
-  clearAll() {
-    this.enteredDigits = '';
-    this.updateDisplay();
-  },
-
-  updateDisplay() {
-    const slots = document.querySelectorAll('.kiosk-display .digit-slot');
-    slots.forEach((slot, index) => {
-      if (index < this.enteredDigits.length) {
-        slot.textContent = this.enteredDigits[index];
-        slot.classList.add('filled');
-      } else {
-        slot.textContent = '·';
-        slot.classList.remove('filled');
-      }
-    });
-  },
-
-  searchAndPromptStudent(last4) {
-    const matchedStudents = window.store.findStudentsByLast4(last4);
-
-    if (matchedStudents.length === 0) {
-      alert(`뒷자리 [${last4}] 번호로 등록된 학생을 찾을 수 없습니다.\n선생님께 문의해주세요.`);
-      this.clearAll();
-      return;
-    }
-
-    if (matchedStudents.length === 1) {
-      this.showCheckPrompt(matchedStudents[0]);
-    } else {
-      // 2명 이상 매칭된 경우 선택 목록 모달
-      this.showMultipleStudentChoice(matchedStudents);
-    }
-  },
-
-  // 출석/퇴실 확인 팝업
-  showCheckPrompt(student) {
-    const today = window.getTodayString();
-    const att = window.store.getTodayAttendanceForStudent(student.id, today);
-    const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
-
-    const modal = document.getElementById('kioskConfirmModal');
-    if (!modal) return;
-
-    document.getElementById('kioskStudentName').textContent = student.name;
-    document.getElementById('kioskStudentInfo').textContent = `${student.level} ${student.grade || ''}`;
-
-    const actionContainer = document.getElementById('kioskActionButtons');
-    if (!isStudying) {
-      actionContainer.innerHTML = `
-        <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
-          <i data-lucide="log-in"></i> 지금 [입실 (등원)] 하기
-        </button>
-      `;
-    } else {
-      const nowTime = window.getCurrentTimeString();
-      const mins = window.calculateDurationMinutes(att.checkIn, nowTime);
-      actionContainer.innerHTML = `
-        <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.88rem;">
-          등원시간: <strong>${att.checkIn}</strong><br>
-          현재까지 학습: <strong style="color:var(--primary);">${window.formatMinutesToKorean(mins)}</strong>
-        </div>
-        <button class="btn btn-danger btn-lg btn-full" onclick="KioskManager.executeCheckOut('${student.id}')">
-          <i data-lucide="log-out"></i> 공부 마치고 [퇴실 (하원)] 하기
-        </button>
-      `;
-    }
-
-    modal.classList.add('active');
-    if (window.lucide) window.lucide.createIcons();
-  },
-
-  showMultipleStudentChoice(students) {
-    const modal = document.getElementById('kioskConfirmModal');
-    if (!modal) return;
-
-    document.getElementById('kioskStudentName').textContent = '학생을 선택하세요';
-    document.getElementById('kioskStudentInfo').textContent = `동일한 뒷번호 학생 ${students.length}명`;
-
-    const actionContainer = document.getElementById('kioskActionButtons');
-    let listHtml = '<div style="display:flex; flex-direction:column; gap:8px;">';
-    students.forEach(s => {
-      listHtml += `
-        <button class="btn btn-outline btn-full" style="padding:12px; justify-content:space-between;" onclick="KioskManager.showCheckPrompt(window.store.getStudentById('${s.id}'))">
-          <strong>${s.name}</strong>
-          <span style="font-size:0.8rem; color:var(--text-muted);">${s.level} ${s.grade || ''}</span>
-        </button>
-      `;
-    });
-    listHtml += '</div>';
-
-    actionContainer.innerHTML = listHtml;
-    modal.classList.add('active');
-  },
-
-  executeCheckIn(studentId) {
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.checkInStudent(studentId);
-    
-    this.closeConfirmModal();
-    this.clearAll();
-    
-    // 축하 토스트 및 메시지
-    window.showToast?.(`🎉 ${student.name} 학생 입실 완료 (${att.checkIn})! 열공하세요!`);
-
-    // 출석 뷰가 있으면 동기화
-    if (window.AttendanceManager) {
-      window.AttendanceManager.render();
-    }
-  },
-
-  executeCheckOut(studentId) {
-    const student = window.store.getStudentById(studentId);
-    const att = window.store.checkOutStudent(studentId);
-    const durStr = window.formatMinutesToKorean(att.durationMinutes);
-
-    this.closeConfirmModal();
-    this.clearAll();
-
-    window.showToast?.(`👋 ${student.name} 학생 퇴실 완료! 오늘 총 학습: ${durStr}`);
-
-    if (window.AttendanceManager) {
-      window.AttendanceManager.render();
-    }
-  },
-
-  closeConfirmModal() {
-    const modal = document.getElementById('kioskConfirmModal');
-    if (modal) modal.classList.remove('active');
-    this.clearAll();
-  }
-};
-
-window.KioskManager = KioskManager;
-
+// ==========================================
 
 /**
  * EduCheck - Main Application Entry & Tab Navigation
  * 화면 전환, 실시간 시계, 통계 리포트 렌더링, 토스트 알림
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+  });
+} else {
   App.init();
-});
+}
 
 const App = {
   currentTab: 'attendance',
@@ -3126,6 +4514,7 @@ const App = {
     // 하위 모듈 초기화
     window.AttendanceManager?.init();
     window.StudentsManager?.init();
+    window.IndividualAttendanceManager?.init();
     window.KioskManager?.init();
 
     if (window.lucide) {
@@ -3206,6 +4595,8 @@ const App = {
     // 3. 탭별 데이터 리프레시
     if (tabName === 'attendance') {
       window.AttendanceManager?.render();
+    } else if (tabName === 'individual') {
+      window.IndividualAttendanceManager?.render();
     } else if (tabName === 'students') {
       window.StudentsManager?.render();
     } else if (tabName === 'kiosk') {
@@ -3423,6 +4814,24 @@ window.showToast = (message) => {
 window.App = App;
 
 
+// 전역 토스트 알림 함수
+window.showToast = (message) => {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = message;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px)';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 2600);
+};
+
 // PWA Service Worker 등록 (오프라인 지원)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -3431,6 +4840,7 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.warn('Service Worker registration failed:', err));
   });
 }
+
   </script>
 
 </body>

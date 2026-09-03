@@ -234,6 +234,111 @@ const ExcelManager = {
       }
     };
     reader.readAsArrayBuffer(file);
+  },
+
+  // 5. 학생 개인별 월간 출석부 엑셀 내보내기
+  exportIndividualMonthlyReport(studentId, yearMonth = null) {
+    if (typeof XLSX === 'undefined') {
+      alert('엑셀 라이브러리가 로드되지 않았습니다.');
+      return;
+    }
+
+    const student = window.store.getStudentById(studentId);
+    if (!student) {
+      alert('학생 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!yearMonth) {
+      yearMonth = window.getTodayString().slice(0, 7);
+    }
+
+    const [yearStr, monthStr] = yearMonth.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const studentAtts = window.store.attendances.filter(a => a.studentId === student.id && a.date && a.date.startsWith(yearMonth));
+    const schSummary = DataStore.formatScheduleText(student.schedules) || '미설정';
+
+    const rows = [
+      [`공부방 학생 개인 출석부 (${year}년 ${month}월)`],
+      [`학생명: ${student.name} (${student.level} ${student.grade || ''})`, `연락처: ${student.phone || student.parentPhone || '-'}`, `정규 시간표: ${schSummary}`],
+      [],
+      ['일자', '요일', '스케줄(예정)', '입실시간', '퇴실시간', '학습시간', '출결상태', '비고/사유']
+    ];
+
+    let totalMinutes = 0;
+    let attendedCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    let supplementCount = 0;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${yearMonth}-${String(d).padStart(2, '0')}`;
+      const dayName = DataStore.getDayName(dStr);
+      const matchingSchedule = (student.schedules || []).find(s => s.day === dayName);
+      const att = studentAtts.find(a => a.date === dStr);
+
+      const schText = matchingSchedule ? `${matchingSchedule.time} (${matchingSchedule.durationMinutes || 90}분)` : '-';
+      let checkIn = '-';
+      let checkOut = '-';
+      let durationStr = '-';
+      let statusKr = matchingSchedule ? '미출석' : '-';
+      let memo = '';
+
+      if (att) {
+        checkIn = att.checkIn || '-';
+        checkOut = att.checkOut || (att.checkIn ? '학습중' : '-');
+        
+        if (att.status === 'present') { statusKr = '정상출석'; attendedCount++; }
+        else if (att.status === 'late') { statusKr = '지각'; attendedCount++; lateCount++; }
+        else if (att.status === 'early_leave') { statusKr = '조퇴'; attendedCount++; }
+        else if (att.status === 'absent') { statusKr = '결석'; absentCount++; }
+        else if (att.status === 'supplement') { statusKr = '보강'; attendedCount++; supplementCount++; }
+
+        if (att.durationMinutes > 0) {
+          totalMinutes += att.durationMinutes;
+          durationStr = window.formatMinutesToKorean(att.durationMinutes);
+        }
+        memo = att.memo || '';
+      }
+
+      rows.push([
+        `${d}일`,
+        dayName,
+        schText,
+        checkIn,
+        checkOut,
+        durationStr,
+        statusKr,
+        memo
+      ]);
+    }
+
+    // 통계 요약 행
+    rows.push([]);
+    rows.push(['[월간 출결 요약]']);
+    rows.push(['총 출석일수', `${attendedCount}일`, '총 학습시간', window.formatMinutesToKorean(totalMinutes), '지각', `${lateCount}회`, '결석', `${absentCount}회`]);
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      { wch: 8 },  // 일자
+      { wch: 6 },  // 요일
+      { wch: 18 }, // 스케줄
+      { wch: 12 }, // 입실시간
+      { wch: 12 }, // 퇴실시간
+      { wch: 14 }, // 학습시간
+      { wch: 12 }, // 상태
+      { wch: 25 }  // 비고
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `${student.name}_${month}월출석부`);
+
+    const fileName = `${student.name}_개인출석부_${yearMonth}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    window.showToast?.(`✅ ${fileName} 다운로드가 완료되었습니다.`);
   }
 };
 

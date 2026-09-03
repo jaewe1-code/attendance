@@ -3,9 +3,13 @@
  * 화면 전환, 실시간 시계, 통계 리포트 렌더링, 토스트 알림
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+  });
+} else {
   App.init();
-});
+}
 
 const App = {
   currentTab: 'attendance',
@@ -18,6 +22,7 @@ const App = {
     // 하위 모듈 초기화
     window.AttendanceManager?.init();
     window.StudentsManager?.init();
+    window.IndividualAttendanceManager?.init();
     window.KioskManager?.init();
 
     if (window.lucide) {
@@ -98,6 +103,8 @@ const App = {
     // 3. 탭별 데이터 리프레시
     if (tabName === 'attendance') {
       window.AttendanceManager?.render();
+    } else if (tabName === 'individual') {
+      window.IndividualAttendanceManager?.render();
     } else if (tabName === 'students') {
       window.StudentsManager?.render();
     } else if (tabName === 'kiosk') {
