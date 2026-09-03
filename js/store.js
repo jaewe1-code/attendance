@@ -63,27 +63,16 @@ class DataStore {
   }
 
   init() {
-    let needSave = false;
-
     // 1. 학생 데이터 로드
     const savedStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
     if (savedStudents) {
       try {
         this.students = JSON.parse(savedStudents);
-        const seenIds = new Set();
-        this.students.forEach((s, i) => {
-          if (!s.id || seenIds.has(s.id)) {
-            s.id = 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
-            needSave = true;
-          }
-          seenIds.add(s.id);
-        });
       } catch (e) {
         this.students = [];
       }
     } else {
       this.students = [];
-      this.saveStudents();
     }
 
     // 2. 출결 데이터 로드
@@ -91,28 +80,100 @@ class DataStore {
     if (savedAttendances) {
       try {
         this.attendances = JSON.parse(savedAttendances);
-        const seenAttIds = new Set();
-        this.attendances.forEach((a, i) => {
-          if (!a.id || seenAttIds.has(a.id)) {
-            a.id = 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
-            needSave = true;
-          }
-          seenAttIds.add(a.id);
-        });
       } catch (e) {
         this.attendances = [];
       }
     } else {
       this.attendances = [];
-      this.saveAttendances();
     }
 
-    if (needSave) {
+    // 3. 데이터 무결성 검사 및 중복/오류 완전 치료
+    this.sanitizeData();
+
+    this.initIndexedDB();
+  }
+
+  // 데이터 무결성 완전 치료 (중복 ID, 다중 출결 레코드, 세션 오류 정규화)
+  sanitizeData() {
+    let modified = false;
+
+    // 1) 학생 ID 고유화 및 맵 생성
+    const idMap = new Map(); // oldId -> newId (필요시)
+    const seenIds = new Set();
+    
+    this.students.forEach((s, idx) => {
+      if (!s.id || seenIds.has(s.id)) {
+        const newId = 'std-' + (Date.now() + idx) + '-' + Math.random().toString(36).substr(2, 6);
+        s.id = newId;
+        modified = true;
+      }
+      seenIds.add(s.id);
+    });
+
+    const validStudentIds = new Set(this.students.map(s => s.id));
+
+    // 2) 출결 데이터 무결성 정규화 (1학생 1날짜 1레코드 원칙)
+    const attendanceMap = new Map(); // key: "studentId_date" -> record
+
+    const cleanedAttendances = [];
+
+    this.attendances.forEach((att, idx) => {
+      if (!att || !att.studentId || !att.date) return;
+      
+      // 유효한 학생 ID인지 확인
+      if (!validStudentIds.has(att.studentId)) {
+        // 학생이 없어진 유령 출결은 무시
+        modified = true;
+        return;
+      }
+
+      const key = `${att.studentId}_${att.date}`;
+      if (!attendanceMap.has(key)) {
+        // 고유 ID 보장
+        if (!att.id) {
+          att.id = 'att-' + (Date.now() + idx) + '-' + Math.random().toString(36).substr(2, 6);
+          modified = true;
+        }
+        // sessions 정규화
+        if (!Array.isArray(att.sessions)) {
+          att.sessions = [];
+          if (att.checkIn) {
+            att.sessions.push({
+              in: att.checkIn,
+              out: att.checkOut || null,
+              duration: att.durationMinutes || 0
+            });
+            modified = true;
+          }
+        }
+        attendanceMap.set(key, att);
+        cleanedAttendances.push(att);
+      } else {
+        // 동일 날짜에 중복된 출결 레코드가 있으면 세션을 병합하고 1개로 통합!
+        const existing = attendanceMap.get(key);
+        if (Array.isArray(att.sessions) && att.sessions.length > 0) {
+          existing.sessions = [...(existing.sessions || []), ...att.sessions];
+        } else if (att.checkIn) {
+          existing.sessions.push({
+            in: att.checkIn,
+            out: att.checkOut || null,
+            duration: att.durationMinutes || 0
+          });
+        }
+        if (att.checkIn && !existing.checkIn) existing.checkIn = att.checkIn;
+        if (att.checkOut && !existing.checkOut) existing.checkOut = att.checkOut;
+        existing.durationMinutes = (existing.sessions || []).reduce((sum, s) => sum + (s.duration || 0), 0);
+        modified = true;
+      }
+    });
+
+    this.attendances = cleanedAttendances;
+
+    if (modified) {
+      console.log('DataStore: Sanitized and saved clean data state.');
       this.saveStudents();
       this.saveAttendances();
     }
-
-    this.initIndexedDB();
   }
 
   // IndexedDB 영구 저장소 초기화 (브라우저 캐시 삭제 시에도 안전)

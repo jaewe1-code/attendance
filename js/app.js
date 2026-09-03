@@ -66,6 +66,42 @@ const App = {
     setInterval(updateClock, 1000);
   },
 
+  // 브라우저 캐시 정리, 서비스워커 해제, 데이터 정규화 및 강력 새로고침
+  async forceRefreshApp() {
+    window.showToast?.('🔄 브라우저 캐시 정리 및 데이터 최적화 중...');
+    
+    // 1. Service Worker 해제
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let reg of registrations) {
+          await reg.unregister();
+        }
+      } catch (e) {
+        console.warn('SW unregister error:', e);
+      }
+    }
+
+    // 2. CacheStorage 완전 삭제
+    if ('caches' in window) {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      } catch (e) {
+        console.warn('Caches delete error:', e);
+      }
+    }
+
+    // 3. 데이터 무결성 검사 및 정규화
+    if (window.store && typeof window.store.sanitizeData === 'function') {
+      window.store.sanitizeData();
+    }
+
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 400);
+  },
+
   // 하단 탭 네비게이션
   bindTabEvents() {
     const navItems = document.querySelectorAll('.bottom-nav .nav-item');

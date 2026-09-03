@@ -1305,6 +1305,9 @@ body {
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="App.forceRefreshApp()" title="새로고침 & 캐시/데이터 정리" style="color: #6366f1;">
+          <i data-lucide="refresh-cw"></i>
+        </button>
         <div id="localSaveBadge" style="display:flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:600; color:var(--text-muted); background:#f1f5f9; padding:4px 8px; border-radius:var(--radius-full); transition:all 0.25s;">
           <i data-lucide="hard-drive" style="width:12px; height:12px;"></i>
           <span>로컬 단독보관</span>
@@ -2007,27 +2010,16 @@ class DataStore {
   }
 
   init() {
-    let needSave = false;
-
     // 1. 학생 데이터 로드
     const savedStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
     if (savedStudents) {
       try {
         this.students = JSON.parse(savedStudents);
-        const seenIds = new Set();
-        this.students.forEach((s, i) => {
-          if (!s.id || seenIds.has(s.id)) {
-            s.id = 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
-            needSave = true;
-          }
-          seenIds.add(s.id);
-        });
       } catch (e) {
         this.students = [];
       }
     } else {
       this.students = [];
-      this.saveStudents();
     }
 
     // 2. 출결 데이터 로드
@@ -2035,28 +2027,100 @@ class DataStore {
     if (savedAttendances) {
       try {
         this.attendances = JSON.parse(savedAttendances);
-        const seenAttIds = new Set();
-        this.attendances.forEach((a, i) => {
-          if (!a.id || seenAttIds.has(a.id)) {
-            a.id = 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
-            needSave = true;
-          }
-          seenAttIds.add(a.id);
-        });
       } catch (e) {
         this.attendances = [];
       }
     } else {
       this.attendances = [];
-      this.saveAttendances();
     }
 
-    if (needSave) {
+    // 3. 데이터 무결성 검사 및 중복/오류 완전 치료
+    this.sanitizeData();
+
+    this.initIndexedDB();
+  }
+
+  // 데이터 무결성 완전 치료 (중복 ID, 다중 출결 레코드, 세션 오류 정규화)
+  sanitizeData() {
+    let modified = false;
+
+    // 1) 학생 ID 고유화 및 맵 생성
+    const idMap = new Map(); // oldId -> newId (필요시)
+    const seenIds = new Set();
+    
+    this.students.forEach((s, idx) => {
+      if (!s.id || seenIds.has(s.id)) {
+        const newId = 'std-' + (Date.now() + idx) + '-' + Math.random().toString(36).substr(2, 6);
+        s.id = newId;
+        modified = true;
+      }
+      seenIds.add(s.id);
+    });
+
+    const validStudentIds = new Set(this.students.map(s => s.id));
+
+    // 2) 출결 데이터 무결성 정규화 (1학생 1날짜 1레코드 원칙)
+    const attendanceMap = new Map(); // key: "studentId_date" -> record
+
+    const cleanedAttendances = [];
+
+    this.attendances.forEach((att, idx) => {
+      if (!att || !att.studentId || !att.date) return;
+      
+      // 유효한 학생 ID인지 확인
+      if (!validStudentIds.has(att.studentId)) {
+        // 학생이 없어진 유령 출결은 무시
+        modified = true;
+        return;
+      }
+
+      const key = `${att.studentId}_${att.date}`;
+      if (!attendanceMap.has(key)) {
+        // 고유 ID 보장
+        if (!att.id) {
+          att.id = 'att-' + (Date.now() + idx) + '-' + Math.random().toString(36).substr(2, 6);
+          modified = true;
+        }
+        // sessions 정규화
+        if (!Array.isArray(att.sessions)) {
+          att.sessions = [];
+          if (att.checkIn) {
+            att.sessions.push({
+              in: att.checkIn,
+              out: att.checkOut || null,
+              duration: att.durationMinutes || 0
+            });
+            modified = true;
+          }
+        }
+        attendanceMap.set(key, att);
+        cleanedAttendances.push(att);
+      } else {
+        // 동일 날짜에 중복된 출결 레코드가 있으면 세션을 병합하고 1개로 통합!
+        const existing = attendanceMap.get(key);
+        if (Array.isArray(att.sessions) && att.sessions.length > 0) {
+          existing.sessions = [...(existing.sessions || []), ...att.sessions];
+        } else if (att.checkIn) {
+          existing.sessions.push({
+            in: att.checkIn,
+            out: att.checkOut || null,
+            duration: att.durationMinutes || 0
+          });
+        }
+        if (att.checkIn && !existing.checkIn) existing.checkIn = att.checkIn;
+        if (att.checkOut && !existing.checkOut) existing.checkOut = att.checkOut;
+        existing.durationMinutes = (existing.sessions || []).reduce((sum, s) => sum + (s.duration || 0), 0);
+        modified = true;
+      }
+    });
+
+    this.attendances = cleanedAttendances;
+
+    if (modified) {
+      console.log('DataStore: Sanitized and saved clean data state.');
       this.saveStudents();
       this.saveAttendances();
     }
-
-    this.initIndexedDB();
   }
 
   // IndexedDB 영구 저장소 초기화 (브라우저 캐시 삭제 시에도 안전)
@@ -4603,6 +4667,42 @@ const App = {
     setInterval(updateClock, 1000);
   },
 
+  // 브라우저 캐시 정리, 서비스워커 해제, 데이터 정규화 및 강력 새로고침
+  async forceRefreshApp() {
+    window.showToast?.('🔄 브라우저 캐시 정리 및 데이터 최적화 중...');
+    
+    // 1. Service Worker 해제
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let reg of registrations) {
+          await reg.unregister();
+        }
+      } catch (e) {
+        console.warn('SW unregister error:', e);
+      }
+    }
+
+    // 2. CacheStorage 완전 삭제
+    if ('caches' in window) {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      } catch (e) {
+        console.warn('Caches delete error:', e);
+      }
+    }
+
+    // 3. 데이터 무결성 검사 및 정규화
+    if (window.store && typeof window.store.sanitizeData === 'function') {
+      window.store.sanitizeData();
+    }
+
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 400);
+  },
+
   // 하단 탭 네비게이션
   bindTabEvents() {
     const navItems = document.querySelectorAll('.bottom-nav .nav-item');
@@ -4877,16 +4977,17 @@ window.showToast = (message) => {
   }, 2600);
 };
 
-// PWA Service Worker 등록 및 항상 최신 버전 유지
+// 구버전 캐시 및 ServiceWorker 완전 등록 해제 (최신 버전 100% 즉시 반영)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => {
-        console.log('Service Worker Registered!', reg.scope);
-        // 항상 최신 sw.js 확인
-        reg.update();
-      })
-      .catch(err => console.warn('Service Worker registration failed:', err));
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+if ('caches' in window) {
+  caches.keys().then(names => {
+    names.forEach(name => caches.delete(name));
   });
 }
 
