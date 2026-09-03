@@ -1432,11 +1432,67 @@ body {
   animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-@keyframes shake {
-  10%, 90% { transform: translate3d(-3px, 0, 0); }
-  20%, 80% { transform: translate3d(5px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-  40%, 60% { transform: translate3d(6px, 0, 0); }
+/* 11. Option Selection Cards (for Excel Import Mode etc) */
+.option-cards-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.option-card-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.option-card-label:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.option-card-radio {
+  margin-top: 3px;
+  accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.option-card-label.selected,
+.option-card-radio:checked + .option-card-content,
+.option-card-label:has(.option-card-radio:checked) {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.option-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.option-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.option-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.35;
 }
   </style>
 
@@ -2220,6 +2276,67 @@ body {
         <button type="button" class="btn btn-ghost btn-sm" id="btnAuthGoKiosk" style="font-size: 0.8rem; color: var(--text-muted);">
           <i data-lucide="keypad"></i> 학생 셀프출석 키오스크로 이동
         </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 7. 엑셀 학생 명단 업로드 방식 선택 모달 (추가 vs 덮어쓰기) -->
+  <div class="modal-overlay" id="excelImportModeModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="modal-header">
+        <div>
+          <h3>학생 명단 엑셀 등록 방식 선택</h3>
+          <span style="font-size: 0.82rem; color: var(--primary); font-weight: 700;" id="excelImportFileInfo">파일 파싱 중...</span>
+        </div>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="App.closeExcelImportModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 6px;">
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45;">
+          엑셀 파일의 학생 데이터를 어떻게 등록하시겠습니까?
+        </p>
+
+        <!-- 라디오 선택 카드 그룹 -->
+        <div class="option-cards-group">
+          <!-- 1. 기존 명단에 추가 -->
+          <label class="option-card-label" for="importModeAppend">
+            <input type="radio" id="importModeAppend" name="excelImportMode" value="append" class="option-card-radio" checked>
+            <div class="option-card-content">
+              <span class="option-card-title">
+                <span>➕ 기존 학생 명단에 추가하기</span>
+                <span class="badge badge-present" style="font-size: 0.72rem; padding: 2px 6px;">권장</span>
+              </span>
+              <span class="option-card-desc">
+                현재 등록된 학생들을 그대로 유지하고, 엑셀 파일의 학생들을 새롭게 추가합니다.
+              </span>
+            </div>
+          </label>
+
+          <!-- 2. 기존 명단 전체 덮어쓰기 -->
+          <label class="option-card-label" for="importModeOverwrite">
+            <input type="radio" id="importModeOverwrite" name="excelImportMode" value="overwrite" class="option-card-radio">
+            <div class="option-card-content">
+              <span class="option-card-title" style="color: var(--danger);">
+                <span>⚠️ 기존 명단 전체 덮어쓰기</span>
+                <span class="badge" style="background:#fee2e2; color:#ef4444; font-size:0.72rem; padding:2px 6px;">초기화</span>
+              </span>
+              <span class="option-card-desc">
+                기존에 등록되어 있던 모든 학생 명단을 삭제하고, 이번 엑셀 파일의 명단으로 새로 교체합니다.
+              </span>
+            </div>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button type="button" class="btn btn-outline btn-full" onclick="App.closeExcelImportModal()">취소</button>
+          <button type="button" class="btn btn-primary btn-full" id="btnConfirmExcelImport">
+            <i data-lucide="check"></i> 선택한 방식으로 등록
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -5189,8 +5306,8 @@ const ExcelManager = {
     window.showToast?.('📥 엑셀 등록 양식이 다운로드되었습니다.');
   },
 
-  // 4. 학생 명단 엑셀 파일 읽어서 일괄 등록
-  importStudentsFromExcel(file, callback) {
+  // 4. 학생 명단 엑셀 파일 파싱 (데이터 미리보기 및 검증용)
+  parseStudentExcel(file, callback) {
     if (typeof XLSX === 'undefined') {
       alert('엑셀 라이브러리가 로드되지 않았습니다.');
       return;
@@ -5212,8 +5329,8 @@ const ExcelManager = {
           return;
         }
 
-        // 헤더 다음 행부터 처리
-        let addedCount = 0;
+        // 헤더 다음 행부터 파싱
+        const parsedStudents = [];
         for (let i = 1; i < jsonData.length; i++) {
           const row = jsonData[i];
           const name = row[0] ? String(row[0]).trim() : '';
@@ -5226,7 +5343,7 @@ const ExcelManager = {
           const targetHours = Number(row[5]) || 10;
           const memo = row[6] ? String(row[6]).trim() : '';
 
-          window.store.addStudent({
+          parsedStudents.push({
             name,
             level,
             grade,
@@ -5235,16 +5352,48 @@ const ExcelManager = {
             weeklyTargetHours: targetHours,
             memo
           });
-          addedCount++;
         }
 
-        if (callback) callback(addedCount);
+        if (parsedStudents.length === 0) {
+          alert('등록 가능한 유효한 학생 명단이 없습니다.');
+          return;
+        }
+
+        if (callback) callback(parsedStudents);
       } catch (err) {
         console.error('Excel parse error', err);
         alert('엑셀 파일을 읽는 중 오류가 발생했습니다. 양식을 확인해주세요.');
       }
     };
     reader.readAsArrayBuffer(file);
+  },
+
+  // 학생 명단 일괄 등록 실행 (mode: 'append' | 'overwrite')
+  importParsedStudents(studentsList, mode = 'append', callback) {
+    if (!studentsList || !Array.isArray(studentsList) || studentsList.length === 0) {
+      alert('등록할 학생 데이터가 없습니다.');
+      return;
+    }
+
+    // 덮어쓰기 모드일 경우 기존 학생 데이터 전체 삭제
+    if (mode === 'overwrite') {
+      window.store.clearAllStudents();
+    }
+
+    let addedCount = 0;
+    studentsList.forEach(std => {
+      window.store.addStudent(std);
+      addedCount++;
+    });
+
+    if (callback) callback(addedCount, mode);
+  },
+
+  // 엑셀 파일 직접 등록 (하위 호환)
+  importStudentsFromExcel(file, mode = 'append', callback) {
+    this.parseStudentExcel(file, (studentsList) => {
+      this.importParsedStudents(studentsList, mode, callback);
+    });
   },
 
   // 5. 학생 개인별 월간 출석부 엑셀 내보내기
@@ -5562,19 +5711,63 @@ const App = {
       });
     }
 
-    // 엑셀 학생 업로드 인풋
+    // 엑셀 학생 업로드 인풋 (모달을 통해 추가/덮어쓰기 선택)
     const excelFileInput = document.getElementById('excelStudentFileInput');
     if (excelFileInput) {
       excelFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-          window.ExcelManager?.importStudentsFromExcel(file, (count) => {
-            window.showToast?.(`🎉 엑셀에서 ${count}명의 학생을 성공적으로 등록했습니다!`);
-            excelFileInput.value = '';
-            window.StudentsManager?.render();
-            window.AttendanceManager?.render();
+          window.ExcelManager?.parseStudentExcel(file, (parsedStudents) => {
+            this.pendingParsedStudents = parsedStudents;
+            this.pendingImportFileName = file.name;
+
+            const infoEl = document.getElementById('excelImportFileInfo');
+            if (infoEl) {
+              infoEl.textContent = `📁 ${file.name} (총 ${parsedStudents.length}명 확인됨)`;
+            }
+
+            // 모달 열기
+            const modal = document.getElementById('excelImportModeModal');
+            if (modal) {
+              modal.classList.add('active');
+            }
           });
         }
+      });
+    }
+
+    // 엑셀 업로드 확인 버튼
+    const confirmImportBtn = document.getElementById('btnConfirmExcelImport');
+    if (confirmImportBtn) {
+      confirmImportBtn.addEventListener('click', () => {
+        if (!this.pendingParsedStudents || this.pendingParsedStudents.length === 0) {
+          alert('등록할 학생 데이터가 없습니다.');
+          this.closeExcelImportModal();
+          return;
+        }
+
+        const selectedMode = document.querySelector('input[name="excelImportMode"]:checked')?.value || 'append';
+
+        if (selectedMode === 'overwrite') {
+          const currentCount = window.store.getStudents().length;
+          if (currentCount > 0) {
+            const confirmed = confirm(`⚠️ 주의: 기존 등록된 학생 ${currentCount}명의 명단이 모두 삭제되고, 엑셀의 ${this.pendingParsedStudents.length}명으로 새로 교체됩니다.\n\n정말 덮어쓰시겠습니까?`);
+            if (!confirmed) return;
+          }
+        }
+
+        window.ExcelManager?.importParsedStudents(this.pendingParsedStudents, selectedMode, (count, mode) => {
+          const modeKr = mode === 'overwrite' ? '덮어쓰기(새로 등록)' : '추가 등록';
+          window.showToast?.(`🎉 엑셀에서 ${count}명의 학생을 ${modeKr} 완료했습니다!`);
+          
+          this.closeExcelImportModal();
+          if (excelFileInput) excelFileInput.value = '';
+          this.pendingParsedStudents = null;
+
+          window.StudentsManager?.render();
+          window.AttendanceManager?.render();
+          this.renderReportView();
+        });
       });
     }
 
@@ -5701,6 +5894,15 @@ const App = {
       });
     }
     alert(msg);
+  },
+
+  // 엑셀 업로드 방식 선택 모달 닫기
+  closeExcelImportModal() {
+    const modal = document.getElementById('excelImportModeModal');
+    if (modal) modal.classList.remove('active');
+    const input = document.getElementById('excelStudentFileInput');
+    if (input) input.value = '';
+    this.pendingParsedStudents = null;
   }
 };
 
@@ -5723,25 +5925,6 @@ window.showToast = (message) => {
 };
 
 window.App = App;
-
-
-// 전역 토스트 알림 함수
-window.showToast = (message) => {
-  const container = document.getElementById('toastContainer');
-  if (!container) return;
-
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = message;
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-10px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 2600);
-};
 
 // 구버전 캐시 및 ServiceWorker 완전 등록 해제 (최신 버전 100% 즉시 반영)
 if ('serviceWorker' in navigator) {

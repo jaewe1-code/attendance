@@ -202,19 +202,63 @@ const App = {
       });
     }
 
-    // 엑셀 학생 업로드 인풋
+    // 엑셀 학생 업로드 인풋 (모달을 통해 추가/덮어쓰기 선택)
     const excelFileInput = document.getElementById('excelStudentFileInput');
     if (excelFileInput) {
       excelFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-          window.ExcelManager?.importStudentsFromExcel(file, (count) => {
-            window.showToast?.(`🎉 엑셀에서 ${count}명의 학생을 성공적으로 등록했습니다!`);
-            excelFileInput.value = '';
-            window.StudentsManager?.render();
-            window.AttendanceManager?.render();
+          window.ExcelManager?.parseStudentExcel(file, (parsedStudents) => {
+            this.pendingParsedStudents = parsedStudents;
+            this.pendingImportFileName = file.name;
+
+            const infoEl = document.getElementById('excelImportFileInfo');
+            if (infoEl) {
+              infoEl.textContent = `📁 ${file.name} (총 ${parsedStudents.length}명 확인됨)`;
+            }
+
+            // 모달 열기
+            const modal = document.getElementById('excelImportModeModal');
+            if (modal) {
+              modal.classList.add('active');
+            }
           });
         }
+      });
+    }
+
+    // 엑셀 업로드 확인 버튼
+    const confirmImportBtn = document.getElementById('btnConfirmExcelImport');
+    if (confirmImportBtn) {
+      confirmImportBtn.addEventListener('click', () => {
+        if (!this.pendingParsedStudents || this.pendingParsedStudents.length === 0) {
+          alert('등록할 학생 데이터가 없습니다.');
+          this.closeExcelImportModal();
+          return;
+        }
+
+        const selectedMode = document.querySelector('input[name="excelImportMode"]:checked')?.value || 'append';
+
+        if (selectedMode === 'overwrite') {
+          const currentCount = window.store.getStudents().length;
+          if (currentCount > 0) {
+            const confirmed = confirm(`⚠️ 주의: 기존 등록된 학생 ${currentCount}명의 명단이 모두 삭제되고, 엑셀의 ${this.pendingParsedStudents.length}명으로 새로 교체됩니다.\n\n정말 덮어쓰시겠습니까?`);
+            if (!confirmed) return;
+          }
+        }
+
+        window.ExcelManager?.importParsedStudents(this.pendingParsedStudents, selectedMode, (count, mode) => {
+          const modeKr = mode === 'overwrite' ? '덮어쓰기(새로 등록)' : '추가 등록';
+          window.showToast?.(`🎉 엑셀에서 ${count}명의 학생을 ${modeKr} 완료했습니다!`);
+          
+          this.closeExcelImportModal();
+          if (excelFileInput) excelFileInput.value = '';
+          this.pendingParsedStudents = null;
+
+          window.StudentsManager?.render();
+          window.AttendanceManager?.render();
+          this.renderReportView();
+        });
       });
     }
 
@@ -341,6 +385,15 @@ const App = {
       });
     }
     alert(msg);
+  },
+
+  // 엑셀 업로드 방식 선택 모달 닫기
+  closeExcelImportModal() {
+    const modal = document.getElementById('excelImportModeModal');
+    if (modal) modal.classList.remove('active');
+    const input = document.getElementById('excelStudentFileInput');
+    if (input) input.value = '';
+    this.pendingParsedStudents = null;
   }
 };
 

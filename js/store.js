@@ -275,6 +275,12 @@ class DataStore {
     return sorted.map(s => `${s.day} ${s.time || ''}`).join(', ');
   }
 
+  // 모든 학생 명단 삭제 (덮어쓰기용)
+  clearAllStudents() {
+    this.students = [];
+    this.saveStudents();
+  }
+
   addStudent(studentData) {
     const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
     const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');

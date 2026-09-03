@@ -178,8 +178,8 @@ const ExcelManager = {
     window.showToast?.('📥 엑셀 등록 양식이 다운로드되었습니다.');
   },
 
-  // 4. 학생 명단 엑셀 파일 읽어서 일괄 등록
-  importStudentsFromExcel(file, callback) {
+  // 4. 학생 명단 엑셀 파일 파싱 (데이터 미리보기 및 검증용)
+  parseStudentExcel(file, callback) {
     if (typeof XLSX === 'undefined') {
       alert('엑셀 라이브러리가 로드되지 않았습니다.');
       return;
@@ -201,8 +201,8 @@ const ExcelManager = {
           return;
         }
 
-        // 헤더 다음 행부터 처리
-        let addedCount = 0;
+        // 헤더 다음 행부터 파싱
+        const parsedStudents = [];
         for (let i = 1; i < jsonData.length; i++) {
           const row = jsonData[i];
           const name = row[0] ? String(row[0]).trim() : '';
@@ -215,7 +215,7 @@ const ExcelManager = {
           const targetHours = Number(row[5]) || 10;
           const memo = row[6] ? String(row[6]).trim() : '';
 
-          window.store.addStudent({
+          parsedStudents.push({
             name,
             level,
             grade,
@@ -224,16 +224,48 @@ const ExcelManager = {
             weeklyTargetHours: targetHours,
             memo
           });
-          addedCount++;
         }
 
-        if (callback) callback(addedCount);
+        if (parsedStudents.length === 0) {
+          alert('등록 가능한 유효한 학생 명단이 없습니다.');
+          return;
+        }
+
+        if (callback) callback(parsedStudents);
       } catch (err) {
         console.error('Excel parse error', err);
         alert('엑셀 파일을 읽는 중 오류가 발생했습니다. 양식을 확인해주세요.');
       }
     };
     reader.readAsArrayBuffer(file);
+  },
+
+  // 학생 명단 일괄 등록 실행 (mode: 'append' | 'overwrite')
+  importParsedStudents(studentsList, mode = 'append', callback) {
+    if (!studentsList || !Array.isArray(studentsList) || studentsList.length === 0) {
+      alert('등록할 학생 데이터가 없습니다.');
+      return;
+    }
+
+    // 덮어쓰기 모드일 경우 기존 학생 데이터 전체 삭제
+    if (mode === 'overwrite') {
+      window.store.clearAllStudents();
+    }
+
+    let addedCount = 0;
+    studentsList.forEach(std => {
+      window.store.addStudent(std);
+      addedCount++;
+    });
+
+    if (callback) callback(addedCount, mode);
+  },
+
+  // 엑셀 파일 직접 등록 (하위 호환)
+  importStudentsFromExcel(file, mode = 'append', callback) {
+    this.parseStudentExcel(file, (studentsList) => {
+      this.importParsedStudents(studentsList, mode, callback);
+    });
   },
 
   // 5. 학생 개인별 월간 출석부 엑셀 내보내기
