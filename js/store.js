@@ -63,16 +63,18 @@ class DataStore {
   }
 
   init() {
-    // 1. 학생 데이터 로드 (초기 빈 배열)
+    let needSave = false;
+
+    // 1. 학생 데이터 로드
     const savedStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
     if (savedStudents) {
       try {
         this.students = JSON.parse(savedStudents);
-        // 혹시 과거에 동일한 id로 저장된 학생이 있다면 고유 ID 부여
         const seenIds = new Set();
         this.students.forEach((s, i) => {
           if (!s.id || seenIds.has(s.id)) {
             s.id = 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
+            needSave = true;
           }
           seenIds.add(s.id);
         });
@@ -84,16 +86,29 @@ class DataStore {
       this.saveStudents();
     }
 
-    // 2. 출결 데이터 로드 (초기 빈 배열)
+    // 2. 출결 데이터 로드
     const savedAttendances = localStorage.getItem(STORAGE_KEYS.ATTENDANCE);
     if (savedAttendances) {
       try {
         this.attendances = JSON.parse(savedAttendances);
+        const seenAttIds = new Set();
+        this.attendances.forEach((a, i) => {
+          if (!a.id || seenAttIds.has(a.id)) {
+            a.id = 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6) + '-' + i;
+            needSave = true;
+          }
+          seenAttIds.add(a.id);
+        });
       } catch (e) {
         this.attendances = [];
       }
     } else {
       this.attendances = [];
+      this.saveAttendances();
+    }
+
+    if (needSave) {
+      this.saveStudents();
       this.saveAttendances();
     }
 
