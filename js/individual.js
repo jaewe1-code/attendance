@@ -470,18 +470,18 @@ const IndividualAttendanceManager = {
 
         const dur = att.durationMinutes ? window.formatMinutesToKorean(att.durationMinutes) : (att.checkIn ? '공부중' : '-');
         statusBadge = `
-          <div class="cal-att-badge ${badgeClass}" title="${att.checkIn || ''} ~ ${att.checkOut || ''} (${dur})">
-            ${statusLabel} ${att.checkIn ? att.checkIn : ''}
+          <div class="cal-att-badge ${badgeClass}" title="${statusLabel}: ${att.checkIn || ''} ~ ${att.checkOut || ''} (${dur})">
+            ${statusLabel}${att.checkIn ? ' ' + att.checkIn : ''}
           </div>
         `;
       } else if (matchingSchedule && dStr <= todayStr) {
-        statusBadge = `<div class="cal-att-badge badge-missing">미출석</div>`;
+        statusBadge = `<div class="cal-att-badge badge-missing" title="수업 예정일 미출석">미출석</div>`;
       }
 
       html += `
         <div class="${cellClass}" onclick="IndividualAttendanceManager.openDayAttendanceModal('${student.id}', '${dStr}')">
           <div class="cal-day-num">${d}</div>
-          ${matchingSchedule ? `<div class="cal-sch-tag">🕒 ${matchingSchedule.time}</div>` : ''}
+          ${matchingSchedule ? `<div class="cal-sch-tag" title="정규 수업: ${matchingSchedule.time}">${matchingSchedule.time}</div>` : ''}
           ${statusBadge}
         </div>
       `;

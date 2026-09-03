@@ -1089,24 +1089,37 @@ body {
   color: var(--primary);
 }
 
-/* Calendar Grid */
+/* Calendar Grid (Mobile 7-Column Balanced & Responsive) */
 .calendar-grid-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  padding: 12px;
+  padding: 10px 6px;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .calendar-header-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   text-align: center;
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-color);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cal-header-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .cal-header-cell.sun { color: #ef4444; }
@@ -1114,29 +1127,35 @@ body {
 
 .calendar-days-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-top: 8px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  margin-top: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cal-day-cell {
-  min-height: 64px;
-  border-radius: var(--radius-sm);
+  min-height: 48px;
+  border-radius: 4px;
   border: 1px solid #f1f5f9;
   background: #fafafa;
-  padding: 4px;
+  padding: 3px 1px;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .cal-day-cell:hover {
   background: #f8fafc;
   border-color: #cbd5e1;
-  transform: translateY(-1px);
 }
 
 .cal-day-cell.empty {
@@ -1159,35 +1178,52 @@ body {
 }
 
 .cal-day-num {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-main);
   align-self: flex-start;
   padding: 0 2px;
+  line-height: 1;
 }
 
 .cal-sch-tag {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: #047857;
   font-weight: 700;
   background: #d1fae5;
-  border-radius: 4px;
-  padding: 1px 3px;
+  border-radius: 3px;
+  padding: 1px 0px;
   margin-top: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   text-align: center;
+  box-sizing: border-box;
+  display: block;
+  line-height: 1.15;
+  letter-spacing: -0.3px;
 }
 
 .cal-att-badge {
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  border-radius: 4px;
-  padding: 1px 3px;
+  border-radius: 3px;
+  padding: 1px 0px;
   margin-top: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   text-align: center;
+  box-sizing: border-box;
+  display: block;
+  line-height: 1.15;
+  letter-spacing: -0.3px;
 }
 
 .cal-att-badge.badge-present { background: #dcfce7; color: #15803d; }
@@ -1196,6 +1232,26 @@ body {
 .cal-att-badge.badge-absent { background: #fee2e2; color: #b91c1c; }
 .cal-att-badge.badge-supplement { background: #f3e8ff; color: #6d28d9; }
 .cal-att-badge.badge-missing { background: #f1f5f9; color: #94a3b8; }
+
+@media (max-width: 380px) {
+  .calendar-grid-card {
+    padding: 6px 3px;
+  }
+  .calendar-days-grid {
+    gap: 1.5px;
+  }
+  .cal-day-cell {
+    min-height: 44px;
+    padding: 2px 0px;
+  }
+  .cal-day-num {
+    font-size: 0.68rem;
+  }
+  .cal-sch-tag, .cal-att-badge {
+    font-size: 0.52rem;
+    letter-spacing: -0.8px;
+  }
+}
 
 /* Individual List Row */
 .individual-list-wrap {
@@ -1749,10 +1805,9 @@ body {
             <button class="btn btn-outline btn-sm" id="btnDownloadStudentTemplate">
               <i data-lucide="file-text"></i> 등록 양식 다운
             </button>
-            <label class="btn btn-success btn-sm" style="cursor: pointer;">
+            <button class="btn btn-success btn-sm" id="btnOpenExcelModal" onclick="App.openExcelImportModal()">
               <i data-lucide="folder-up"></i> 엑셀 파일 업로드
-              <input type="file" id="excelStudentFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
-            </label>
+            </button>
           </div>
         </div>
 
@@ -2281,14 +2336,14 @@ body {
   </div>
 
 
-  <!-- 7. 엑셀 학생 명단 업로드 방식 선택 모달 (추가 vs 덮어쓰기) -->
+  <!-- 7. 엑셀 학생 명단 업로드 모달 (추가 vs 덮어쓰기 선택 및 파일 선택 원스톱) -->
   <div class="modal-overlay" id="excelImportModeModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <div class="modal-header">
         <div>
-          <h3>학생 명단 엑셀 등록 방식 선택</h3>
-          <span style="font-size: 0.82rem; color: var(--primary); font-weight: 700;" id="excelImportFileInfo">파일 파싱 중...</span>
+          <h3>학생 명단 엑셀 일괄 등록</h3>
+          <span style="font-size: 0.82rem; color: var(--primary); font-weight: 700;">등록 방식 및 파일 선택</span>
         </div>
         <button class="btn btn-ghost btn-icon btn-sm" onclick="App.closeExcelImportModal()">
           <i data-lucide="x"></i>
@@ -2296,45 +2351,65 @@ body {
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 6px;">
-        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45;">
-          엑셀 파일의 학생 데이터를 어떻게 등록하시겠습니까?
-        </p>
-
-        <!-- 라디오 선택 카드 그룹 -->
-        <div class="option-cards-group">
-          <!-- 1. 기존 명단에 추가 -->
-          <label class="option-card-label" for="importModeAppend">
-            <input type="radio" id="importModeAppend" name="excelImportMode" value="append" class="option-card-radio" checked>
-            <div class="option-card-content">
-              <span class="option-card-title">
-                <span>➕ 기존 학생 명단에 추가하기</span>
-                <span class="badge badge-present" style="font-size: 0.72rem; padding: 2px 6px;">권장</span>
-              </span>
-              <span class="option-card-desc">
-                현재 등록된 학생들을 그대로 유지하고, 엑셀 파일의 학생들을 새롭게 추가합니다.
-              </span>
-            </div>
+        <!-- 1단계: 등록 방식 선택 -->
+        <div>
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; display: block;">
+            1. 등록 방식 선택 *
           </label>
+          <div class="option-cards-group">
+            <!-- 기존 명단에 추가 -->
+            <label class="option-card-label" for="importModeAppend">
+              <input type="radio" id="importModeAppend" name="excelImportMode" value="append" class="option-card-radio" checked>
+              <div class="option-card-content">
+                <span class="option-card-title">
+                  <span>➕ 기존 명단에 추가하기</span>
+                  <span class="badge badge-present" style="font-size: 0.72rem; padding: 2px 6px;">권장</span>
+                </span>
+                <span class="option-card-desc">
+                  현재 등록된 학생들을 그대로 유지하고, 엑셀의 학생들을 새롭게 덧붙여 등록합니다.
+                </span>
+              </div>
+            </label>
 
-          <!-- 2. 기존 명단 전체 덮어쓰기 -->
-          <label class="option-card-label" for="importModeOverwrite">
-            <input type="radio" id="importModeOverwrite" name="excelImportMode" value="overwrite" class="option-card-radio">
-            <div class="option-card-content">
-              <span class="option-card-title" style="color: var(--danger);">
-                <span>⚠️ 기존 명단 전체 덮어쓰기</span>
-                <span class="badge" style="background:#fee2e2; color:#ef4444; font-size:0.72rem; padding:2px 6px;">초기화</span>
-              </span>
-              <span class="option-card-desc">
-                기존에 등록되어 있던 모든 학생 명단을 삭제하고, 이번 엑셀 파일의 명단으로 새로 교체합니다.
-              </span>
-            </div>
-          </label>
+            <!-- 기존 명단 전체 덮어쓰기 -->
+            <label class="option-card-label" for="importModeOverwrite">
+              <input type="radio" id="importModeOverwrite" name="excelImportMode" value="overwrite" class="option-card-radio">
+              <div class="option-card-content">
+                <span class="option-card-title" style="color: var(--danger);">
+                  <span>⚠️ 기존 명단 전체 덮어쓰기</span>
+                  <span class="badge" style="background:#fee2e2; color:#ef4444; font-size:0.72rem; padding:2px 6px;">초기화</span>
+                </span>
+                <span class="option-card-desc">
+                  기존에 등록되어 있던 모든 학생 명단을 삭제(초기화)하고, 이번 엑셀 명단으로 새롭게 교체합니다.
+                </span>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 8px;">
+        <!-- 2단계: 엑셀 파일 선택 -->
+        <div>
+          <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; display: block;">
+            2. 엑셀 파일 선택 (.xlsx, .xls, .csv) *
+          </label>
+          
+          <input type="file" id="modalExcelFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+          
+          <button type="button" class="btn btn-outline btn-full" id="btnSelectExcelFile" onclick="document.getElementById('modalExcelFileInput').click()" style="border: 2px dashed #cbd5e1; padding: 14px; background: #f8fafc;">
+            <i data-lucide="file-plus" style="color: var(--primary);"></i>
+            <span id="modalExcelFileBtnText">엑셀 파일 선택하기</span>
+          </button>
+
+          <!-- 선택된 파일 상태 안내 -->
+          <div id="modalExcelFileStatus" style="display: none; margin-top: 8px; padding: 10px 14px; background: #eef2ff; border-radius: var(--radius-sm); font-size: 0.82rem; color: #4338ca; font-weight: 600;">
+            <!-- JS 렌더링 -->
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
           <button type="button" class="btn btn-outline btn-full" onclick="App.closeExcelImportModal()">취소</button>
-          <button type="button" class="btn btn-primary btn-full" id="btnConfirmExcelImport">
-            <i data-lucide="check"></i> 선택한 방식으로 등록
+          <button type="button" class="btn btn-primary btn-full" id="btnConfirmExcelImport" disabled style="opacity: 0.5;">
+            <i data-lucide="upload"></i> 학생 등록 실행
           </button>
         </div>
       </div>
@@ -4776,18 +4851,18 @@ const IndividualAttendanceManager = {
 
         const dur = att.durationMinutes ? window.formatMinutesToKorean(att.durationMinutes) : (att.checkIn ? '공부중' : '-');
         statusBadge = `
-          <div class="cal-att-badge ${badgeClass}" title="${att.checkIn || ''} ~ ${att.checkOut || ''} (${dur})">
-            ${statusLabel} ${att.checkIn ? att.checkIn : ''}
+          <div class="cal-att-badge ${badgeClass}" title="${statusLabel}: ${att.checkIn || ''} ~ ${att.checkOut || ''} (${dur})">
+            ${statusLabel}${att.checkIn ? ' ' + att.checkIn : ''}
           </div>
         `;
       } else if (matchingSchedule && dStr <= todayStr) {
-        statusBadge = `<div class="cal-att-badge badge-missing">미출석</div>`;
+        statusBadge = `<div class="cal-att-badge badge-missing" title="수업 예정일 미출석">미출석</div>`;
       }
 
       html += `
         <div class="${cellClass}" onclick="IndividualAttendanceManager.openDayAttendanceModal('${student.id}', '${dStr}')">
           <div class="cal-day-num">${d}</div>
-          ${matchingSchedule ? `<div class="cal-sch-tag">🕒 ${matchingSchedule.time}</div>` : ''}
+          ${matchingSchedule ? `<div class="cal-sch-tag" title="정규 수업: ${matchingSchedule.time}">${matchingSchedule.time}</div>` : ''}
           ${statusBadge}
         </div>
       `;
@@ -5711,38 +5786,45 @@ const App = {
       });
     }
 
-    // 엑셀 학생 업로드 인풋 (모달을 통해 추가/덮어쓰기 선택)
-    const excelFileInput = document.getElementById('excelStudentFileInput');
-    if (excelFileInput) {
-      excelFileInput.addEventListener('change', (e) => {
+    // 엑셀 모달 파일 선택 인풋
+    const modalExcelFileInput = document.getElementById('modalExcelFileInput');
+    if (modalExcelFileInput) {
+      modalExcelFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
           window.ExcelManager?.parseStudentExcel(file, (parsedStudents) => {
             this.pendingParsedStudents = parsedStudents;
             this.pendingImportFileName = file.name;
 
-            const infoEl = document.getElementById('excelImportFileInfo');
-            if (infoEl) {
-              infoEl.textContent = `📁 ${file.name} (총 ${parsedStudents.length}명 확인됨)`;
+            const statusEl = document.getElementById('modalExcelFileStatus');
+            const btnTextEl = document.getElementById('modalExcelFileBtnText');
+            const confirmBtn = document.getElementById('btnConfirmExcelImport');
+
+            if (statusEl) {
+              statusEl.style.display = 'block';
+              statusEl.innerHTML = `✅ <strong>${file.name}</strong><br><span style="font-size:0.75rem; color:#4f46e5;">총 ${parsedStudents.length}명의 학생 데이터가 정상 확인되었습니다.</span>`;
             }
 
-            // 모달 열기
-            const modal = document.getElementById('excelImportModeModal');
-            if (modal) {
-              modal.classList.add('active');
+            if (btnTextEl) {
+              btnTextEl.textContent = '다른 파일로 변경하기';
+            }
+
+            if (confirmBtn) {
+              confirmBtn.disabled = false;
+              confirmBtn.style.opacity = '1';
+              confirmBtn.style.cursor = 'pointer';
             }
           });
         }
       });
     }
 
-    // 엑셀 업로드 확인 버튼
+    // 엑셀 업로드 확인 및 실행 버튼
     const confirmImportBtn = document.getElementById('btnConfirmExcelImport');
     if (confirmImportBtn) {
       confirmImportBtn.addEventListener('click', () => {
         if (!this.pendingParsedStudents || this.pendingParsedStudents.length === 0) {
-          alert('등록할 학생 데이터가 없습니다.');
-          this.closeExcelImportModal();
+          alert('먼저 엑셀 파일을 선택해주세요.');
           return;
         }
 
@@ -5751,7 +5833,7 @@ const App = {
         if (selectedMode === 'overwrite') {
           const currentCount = window.store.getStudents().length;
           if (currentCount > 0) {
-            const confirmed = confirm(`⚠️ 주의: 기존 등록된 학생 ${currentCount}명의 명단이 모두 삭제되고, 엑셀의 ${this.pendingParsedStudents.length}명으로 새로 교체됩니다.\n\n정말 덮어쓰시겠습니까?`);
+            const confirmed = confirm(`⚠️ [주의: 전체 덮어쓰기]\n\n현재 등록된 학생 ${currentCount}명의 명단이 모두 삭제되고,\n선택하신 엑셀 파일의 학생 ${this.pendingParsedStudents.length}명으로 새롭게 교체됩니다.\n\n정말 덮어쓰시겠습니까?`);
             if (!confirmed) return;
           }
         }
@@ -5761,8 +5843,6 @@ const App = {
           window.showToast?.(`🎉 엑셀에서 ${count}명의 학생을 ${modeKr} 완료했습니다!`);
           
           this.closeExcelImportModal();
-          if (excelFileInput) excelFileInput.value = '';
-          this.pendingParsedStudents = null;
 
           window.StudentsManager?.render();
           window.AttendanceManager?.render();
@@ -5896,11 +5976,38 @@ const App = {
     alert(msg);
   },
 
+  // 엑셀 업로드 모달 열기
+  openExcelImportModal() {
+    const modal = document.getElementById('excelImportModeModal');
+    const statusEl = document.getElementById('modalExcelFileStatus');
+    const btnTextEl = document.getElementById('modalExcelFileBtnText');
+    const confirmBtn = document.getElementById('btnConfirmExcelImport');
+    const fileInput = document.getElementById('modalExcelFileInput');
+    const radioAppend = document.getElementById('importModeAppend');
+
+    if (modal) {
+      if (statusEl) statusEl.style.display = 'none';
+      if (btnTextEl) btnTextEl.textContent = '엑셀 파일 선택하기';
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = '0.5';
+        confirmBtn.style.cursor = 'not-allowed';
+      }
+      if (fileInput) fileInput.value = '';
+      if (radioAppend) radioAppend.checked = true;
+
+      this.pendingParsedStudents = null;
+      modal.classList.add('active');
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+  },
+
   // 엑셀 업로드 방식 선택 모달 닫기
   closeExcelImportModal() {
     const modal = document.getElementById('excelImportModeModal');
     if (modal) modal.classList.remove('active');
-    const input = document.getElementById('excelStudentFileInput');
+    const input = document.getElementById('modalExcelFileInput');
     if (input) input.value = '';
     this.pendingParsedStudents = null;
   }

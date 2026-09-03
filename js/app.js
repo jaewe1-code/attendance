@@ -202,38 +202,45 @@ const App = {
       });
     }
 
-    // 엑셀 학생 업로드 인풋 (모달을 통해 추가/덮어쓰기 선택)
-    const excelFileInput = document.getElementById('excelStudentFileInput');
-    if (excelFileInput) {
-      excelFileInput.addEventListener('change', (e) => {
+    // 엑셀 모달 파일 선택 인풋
+    const modalExcelFileInput = document.getElementById('modalExcelFileInput');
+    if (modalExcelFileInput) {
+      modalExcelFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
           window.ExcelManager?.parseStudentExcel(file, (parsedStudents) => {
             this.pendingParsedStudents = parsedStudents;
             this.pendingImportFileName = file.name;
 
-            const infoEl = document.getElementById('excelImportFileInfo');
-            if (infoEl) {
-              infoEl.textContent = `📁 ${file.name} (총 ${parsedStudents.length}명 확인됨)`;
+            const statusEl = document.getElementById('modalExcelFileStatus');
+            const btnTextEl = document.getElementById('modalExcelFileBtnText');
+            const confirmBtn = document.getElementById('btnConfirmExcelImport');
+
+            if (statusEl) {
+              statusEl.style.display = 'block';
+              statusEl.innerHTML = `✅ <strong>${file.name}</strong><br><span style="font-size:0.75rem; color:#4f46e5;">총 ${parsedStudents.length}명의 학생 데이터가 정상 확인되었습니다.</span>`;
             }
 
-            // 모달 열기
-            const modal = document.getElementById('excelImportModeModal');
-            if (modal) {
-              modal.classList.add('active');
+            if (btnTextEl) {
+              btnTextEl.textContent = '다른 파일로 변경하기';
+            }
+
+            if (confirmBtn) {
+              confirmBtn.disabled = false;
+              confirmBtn.style.opacity = '1';
+              confirmBtn.style.cursor = 'pointer';
             }
           });
         }
       });
     }
 
-    // 엑셀 업로드 확인 버튼
+    // 엑셀 업로드 확인 및 실행 버튼
     const confirmImportBtn = document.getElementById('btnConfirmExcelImport');
     if (confirmImportBtn) {
       confirmImportBtn.addEventListener('click', () => {
         if (!this.pendingParsedStudents || this.pendingParsedStudents.length === 0) {
-          alert('등록할 학생 데이터가 없습니다.');
-          this.closeExcelImportModal();
+          alert('먼저 엑셀 파일을 선택해주세요.');
           return;
         }
 
@@ -242,7 +249,7 @@ const App = {
         if (selectedMode === 'overwrite') {
           const currentCount = window.store.getStudents().length;
           if (currentCount > 0) {
-            const confirmed = confirm(`⚠️ 주의: 기존 등록된 학생 ${currentCount}명의 명단이 모두 삭제되고, 엑셀의 ${this.pendingParsedStudents.length}명으로 새로 교체됩니다.\n\n정말 덮어쓰시겠습니까?`);
+            const confirmed = confirm(`⚠️ [주의: 전체 덮어쓰기]\n\n현재 등록된 학생 ${currentCount}명의 명단이 모두 삭제되고,\n선택하신 엑셀 파일의 학생 ${this.pendingParsedStudents.length}명으로 새롭게 교체됩니다.\n\n정말 덮어쓰시겠습니까?`);
             if (!confirmed) return;
           }
         }
@@ -252,8 +259,6 @@ const App = {
           window.showToast?.(`🎉 엑셀에서 ${count}명의 학생을 ${modeKr} 완료했습니다!`);
           
           this.closeExcelImportModal();
-          if (excelFileInput) excelFileInput.value = '';
-          this.pendingParsedStudents = null;
 
           window.StudentsManager?.render();
           window.AttendanceManager?.render();
@@ -387,11 +392,38 @@ const App = {
     alert(msg);
   },
 
+  // 엑셀 업로드 모달 열기
+  openExcelImportModal() {
+    const modal = document.getElementById('excelImportModeModal');
+    const statusEl = document.getElementById('modalExcelFileStatus');
+    const btnTextEl = document.getElementById('modalExcelFileBtnText');
+    const confirmBtn = document.getElementById('btnConfirmExcelImport');
+    const fileInput = document.getElementById('modalExcelFileInput');
+    const radioAppend = document.getElementById('importModeAppend');
+
+    if (modal) {
+      if (statusEl) statusEl.style.display = 'none';
+      if (btnTextEl) btnTextEl.textContent = '엑셀 파일 선택하기';
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = '0.5';
+        confirmBtn.style.cursor = 'not-allowed';
+      }
+      if (fileInput) fileInput.value = '';
+      if (radioAppend) radioAppend.checked = true;
+
+      this.pendingParsedStudents = null;
+      modal.classList.add('active');
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+  },
+
   // 엑셀 업로드 방식 선택 모달 닫기
   closeExcelImportModal() {
     const modal = document.getElementById('excelImportModeModal');
     if (modal) modal.classList.remove('active');
-    const input = document.getElementById('excelStudentFileInput');
+    const input = document.getElementById('modalExcelFileInput');
     if (input) input.value = '';
     this.pendingParsedStudents = null;
   }
