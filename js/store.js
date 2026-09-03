@@ -539,11 +539,18 @@ class DataStore {
 
   // 전체 데이터 내보내기 (JSON 백업)
   exportJSON() {
+    let authData = null;
+    try {
+      const rawAuth = localStorage.getItem('educheck_auth_v2');
+      if (rawAuth) authData = JSON.parse(rawAuth);
+    } catch (e) {}
+
     const data = {
-      version: '1.0',
+      version: '1.1',
       exportedAt: new Date().toISOString(),
       students: this.students,
-      attendances: this.attendances
+      attendances: this.attendances,
+      auth: authData
     };
     return JSON.stringify(data, null, 2);
   }
@@ -559,6 +566,14 @@ class DataStore {
       if (data.attendances && Array.isArray(data.attendances)) {
         this.attendances = data.attendances;
         this.saveAttendances();
+      }
+      if (data.auth && typeof data.auth === 'object') {
+        localStorage.setItem('educheck_auth_v2', JSON.stringify(data.auth));
+        if (window.AuthManager) {
+          window.AuthManager.loadAuthConfig();
+          window.AuthManager.renderSettingsUI();
+          window.AuthManager.updateHeaderLockButton();
+        }
       }
       return true;
     } catch (e) {

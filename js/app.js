@@ -20,6 +20,7 @@ const App = {
     this.bindReportEvents();
 
     // 하위 모듈 초기화
+    window.AuthManager?.init();
     window.AttendanceManager?.init();
     window.StudentsManager?.init();
     window.IndividualAttendanceManager?.init();
@@ -115,6 +116,12 @@ const App = {
   },
 
   switchTab(tabName) {
+    // 키오스크가 아닌 관리자 탭 진입 시 비밀번호 잠금 체크
+    if (tabName !== 'kiosk' && window.AuthManager?.hasPassword() && !window.AuthManager?.isSessionAuthenticated()) {
+      window.AuthManager.showLockOverlay();
+      return;
+    }
+
     this.currentTab = tabName;
 
     // 1. 탭 버튼 활성화 상태 변경

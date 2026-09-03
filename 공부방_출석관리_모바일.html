@@ -1278,6 +1278,166 @@ body {
 .row-status-box {
   text-align: right;
 }
+
+/* 10. Auth & Lock Screen Overlay */
+.auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease-in-out;
+}
+
+.auth-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  padding: 28px 22px;
+  box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: translateY(12px) scale(0.98);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.auth-overlay.active .auth-card {
+  transform: translateY(0) scale(1);
+}
+
+.auth-header-badge {
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(135deg, var(--primary), #6366f1);
+  color: white;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -4px var(--primary-glow);
+  margin-bottom: 14px;
+}
+
+.auth-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  margin-bottom: 18px;
+}
+
+.auth-pin-display {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 18px 0;
+  justify-content: center;
+}
+
+.pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #cbd5e1;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pin-dot.filled {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.15);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.auth-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 290px;
+  margin-bottom: 16px;
+}
+
+.auth-key-btn {
+  height: 54px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: #f8fafc;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.auth-key-btn:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: var(--primary);
+}
+
+.auth-key-btn:active {
+  background: var(--primary-light);
+  transform: scale(0.94);
+}
+
+.auth-key-btn.action-btn {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #f1f5f9;
+}
+
+.auth-hint-text {
+  font-size: 0.78rem;
+  color: #6366f1;
+  background: #eef2ff;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 12px;
+  display: none;
+}
+
+/* Shake Animation */
+.shake-anim {
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(5px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
   </style>
 
   <!-- Lucide Icons -->
@@ -1305,6 +1465,9 @@ body {
         </div>
       </div>
       <div class="header-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" id="btnAppLock" title="화면 잠금 / 비밀번호 설정" style="color: #6366f1;">
+          <i data-lucide="shield"></i>
+        </button>
         <button class="btn btn-ghost btn-icon btn-sm" onclick="App.forceRefreshApp()" title="새로고침 & 캐시/데이터 정리" style="color: #6366f1;">
           <i data-lucide="refresh-cw"></i>
         </button>
@@ -1558,6 +1721,32 @@ body {
                 <!-- JS Rendered Rows -->
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- 로그인 & 비밀번호 보안 설정 -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px; background: #ffffff;">
+          <div class="flex-between">
+            <div class="card-title" style="margin-bottom: 0; font-size: 0.92rem;">
+              <i data-lucide="shield-check" style="color: var(--primary);"></i> 로그인 & 비밀번호 보안
+            </div>
+            <div id="authStatusBadge">
+              <span class="badge" style="background:#f1f5f9; color:#64748b; font-size:0.8rem; padding:4px 10px;">🔓 비밀번호 미사용</span>
+            </div>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+            비밀번호를 설정하면 앱 실행 시 또는 화면을 비울 때 안전하게 잠글 수 있습니다.
+          </p>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-sm" id="btnSetPassword" style="flex: 1;">
+              <i data-lucide="key"></i> 비밀번호 설정하기
+            </button>
+            <button class="btn btn-outline btn-sm" id="btnLockNowSettings" style="flex: 1;">
+              <i data-lucide="lock"></i> 지금 화면 잠그기
+            </button>
+            <button class="btn btn-danger btn-sm" id="btnDisablePassword" style="display: none;">
+              <i data-lucide="unlock"></i> 비밀번호 해제
+            </button>
           </div>
         </div>
 
@@ -1936,6 +2125,102 @@ body {
       <button class="btn btn-ghost btn-sm" onclick="KioskManager.closeConfirmModal()" style="margin-top: 6px;">
         취소하고 다시 입력
       </button>
+    </div>
+  </div>
+
+
+  <!-- 5. 비밀번호 설정/변경 모달 -->
+  <div class="modal-overlay" id="passwordSettingsModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="modal-header">
+        <h3 id="passwordModalTitle">비밀번호 설정</h3>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="AuthManager.closePasswordModal()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <form id="passwordSettingsForm" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group" id="currentPasswordGroup" style="display: none;">
+          <label>현재 비밀번호 *</label>
+          <input type="password" id="modalCurrentPassword" class="form-control" placeholder="현재 사용 중인 비밀번호">
+        </div>
+
+        <div class="form-group">
+          <label>새 비밀번호 * (4자리 이상)</label>
+          <input type="password" id="modalNewPassword" class="form-control" placeholder="새 비밀번호 입력 (숫자 또는 영문)" required minlength="4">
+        </div>
+
+        <div class="form-group">
+          <label>새 비밀번호 확인 *</label>
+          <input type="password" id="modalConfirmPassword" class="form-control" placeholder="새 비밀번호 다시 입력" required minlength="4">
+        </div>
+
+        <div class="form-group">
+          <label>비밀번호 힌트 (선택)</label>
+          <input type="text" id="modalPasswordHint" class="form-control" placeholder="예: 공부방 개원일 4자리">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline btn-full" onclick="AuthManager.closePasswordModal()">취소</button>
+          <button type="submit" class="btn btn-primary btn-full">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 6. 풀스크린 비밀번호 잠금/로그인 화면 -->
+  <div class="auth-overlay" id="authLockOverlay" style="display: none;">
+    <div class="auth-card">
+      <div class="auth-header-badge">
+        <i data-lucide="lock" style="width: 28px; height: 28px;"></i>
+      </div>
+      <h2 class="auth-title">보안 잠금 모드</h2>
+      <p class="auth-subtitle">관리자 비밀번호를 입력해주세요</p>
+
+      <div class="auth-hint-text" id="authHintText"></div>
+
+      <!-- PIN 디스플레이 -->
+      <div class="auth-pin-display" id="authPinDots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <!-- 키보드/물리 입력 필드 -->
+      <input type="password" id="authPasswordInput" class="form-control" style="max-width: 220px; text-align: center; font-size: 1.1rem; letter-spacing: 0.2em; margin-bottom: 14px;" placeholder="비밀번호">
+
+      <!-- 터치 숫자 키패드 -->
+      <div class="auth-keypad">
+        <button type="button" class="auth-key-btn" data-num="1">1</button>
+        <button type="button" class="auth-key-btn" data-num="2">2</button>
+        <button type="button" class="auth-key-btn" data-num="3">3</button>
+
+        <button type="button" class="auth-key-btn" data-num="4">4</button>
+        <button type="button" class="auth-key-btn" data-num="5">5</button>
+        <button type="button" class="auth-key-btn" data-num="6">6</button>
+
+        <button type="button" class="auth-key-btn" data-num="7">7</button>
+        <button type="button" class="auth-key-btn" data-num="8">8</button>
+        <button type="button" class="auth-key-btn" data-num="9">9</button>
+
+        <button type="button" class="auth-key-btn action-btn" id="authKeyClear">C</button>
+        <button type="button" class="auth-key-btn" data-num="0">0</button>
+        <button type="button" class="auth-key-btn action-btn" id="authKeyBackspace">
+          <i data-lucide="delete"></i>
+        </button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 290px;">
+        <button type="button" class="btn btn-primary btn-full" id="btnAuthUnlock">
+          <i data-lucide="unlock"></i> 잠금 해제
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btnAuthGoKiosk" style="font-size: 0.8rem; color: var(--text-muted);">
+          <i data-lucide="keypad"></i> 학생 셀프출석 키오스크로 이동
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2486,11 +2771,18 @@ class DataStore {
 
   // 전체 데이터 내보내기 (JSON 백업)
   exportJSON() {
+    let authData = null;
+    try {
+      const rawAuth = localStorage.getItem('educheck_auth_v2');
+      if (rawAuth) authData = JSON.parse(rawAuth);
+    } catch (e) {}
+
     const data = {
-      version: '1.0',
+      version: '1.1',
       exportedAt: new Date().toISOString(),
       students: this.students,
-      attendances: this.attendances
+      attendances: this.attendances,
+      auth: authData
     };
     return JSON.stringify(data, null, 2);
   }
@@ -2507,6 +2799,14 @@ class DataStore {
         this.attendances = data.attendances;
         this.saveAttendances();
       }
+      if (data.auth && typeof data.auth === 'object') {
+        localStorage.setItem('educheck_auth_v2', JSON.stringify(data.auth));
+        if (window.AuthManager) {
+          window.AuthManager.loadAuthConfig();
+          window.AuthManager.renderSettingsUI();
+          window.AuthManager.updateHeaderLockButton();
+        }
+      }
       return true;
     } catch (e) {
       console.error('Failed to import JSON', e);
@@ -2522,6 +2822,465 @@ window.getTodayString = getTodayString;
 window.getCurrentTimeString = getCurrentTimeString;
 window.calculateDurationMinutes = calculateDurationMinutes;
 window.formatMinutesToKorean = formatMinutesToKorean;
+
+/**
+ * EduCheck - Simple Password Authentication & Screen Lock Manager
+ * 간단 비밀번호 로그인, 화면 잠금/해제, 보안 설정 관리
+ */
+
+const AUTH_STORAGE_KEY = 'educheck_auth_v2';
+const AUTH_SESSION_KEY = 'educheck_session_auth';
+
+class AuthManager {
+  constructor() {
+    this.authConfig = {
+      enabled: false,
+      pin: '',
+      hint: '',
+      createdAt: null
+    };
+    this.currentInput = '';
+    this.isLocked = false;
+  }
+
+  init() {
+    this.loadAuthConfig();
+    this.renderSettingsUI();
+    this.bindEvents();
+    this.checkInitialLock();
+  }
+
+  // 설정 로드
+  loadAuthConfig() {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (raw) {
+      try {
+        this.authConfig = JSON.parse(raw);
+      } catch (e) {
+        console.error('Failed to parse auth config:', e);
+      }
+    }
+  }
+
+  // 설정 저장
+  saveAuthConfig() {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(this.authConfig));
+    this.renderSettingsUI();
+    this.updateHeaderLockButton();
+  }
+
+  // 비밀번호 등록 여부
+  hasPassword() {
+    return Boolean(this.authConfig && this.authConfig.enabled && this.authConfig.pin);
+  }
+
+  // 비밀번호 인코딩
+  encodePin(pin) {
+    try {
+      return btoa(encodeURIComponent(pin.trim()));
+    } catch (e) {
+      return pin.trim();
+    }
+  }
+
+  // 비밀번호 디코딩
+  decodePin(encoded) {
+    try {
+      return decodeURIComponent(atob(encoded));
+    } catch (e) {
+      return encoded;
+    }
+  }
+
+  // 비밀번호 검증
+  verifyPassword(inputPin) {
+    if (!this.hasPassword()) return true;
+    const storedPin = this.decodePin(this.authConfig.pin);
+    return storedPin === inputPin.trim();
+  }
+
+  // 세션 인증 여부 확인
+  isSessionAuthenticated() {
+    return sessionStorage.getItem(AUTH_SESSION_KEY) === 'true';
+  }
+
+  // 초기 잠금 상태 확인
+  checkInitialLock() {
+    this.updateHeaderLockButton();
+    if (this.hasPassword()) {
+      if (!this.isSessionAuthenticated()) {
+        this.showLockOverlay();
+      } else {
+        this.hideLockOverlay();
+      }
+    } else {
+      this.hideLockOverlay();
+    }
+  }
+
+  // 상단 헤더 자물쇠 버튼 상태 동기화
+  updateHeaderLockButton() {
+    const lockBtn = document.getElementById('btnAppLock');
+    if (!lockBtn) return;
+
+    if (this.hasPassword()) {
+      lockBtn.style.display = 'inline-flex';
+      lockBtn.title = '화면 잠그기 (로그아웃)';
+      lockBtn.innerHTML = '<i data-lucide="lock"></i>';
+    } else {
+      lockBtn.style.display = 'inline-flex';
+      lockBtn.title = '비밀번호 설정';
+      lockBtn.innerHTML = '<i data-lucide="shield"></i>';
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // 화면 잠금 (로그아웃)
+  lock() {
+    if (!this.hasPassword()) {
+      this.openPasswordModal('create');
+      return;
+    }
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    this.currentInput = '';
+    this.updatePinDisplay();
+    this.showLockOverlay();
+    window.showToast?.('🔒 화면이 잠겼습니다.');
+  }
+
+  // 잠금 해제 (로그인)
+  unlock(inputPin) {
+    const pinToTest = inputPin !== undefined ? inputPin : this.currentInput;
+    if (this.verifyPassword(pinToTest)) {
+      sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+      this.isLocked = false;
+      this.hideLockOverlay();
+      this.currentInput = '';
+      this.updatePinDisplay();
+      window.showToast?.('🔓 정상 로그인되었습니다.');
+      return true;
+    } else {
+      this.triggerShakeAnimation();
+      window.showToast?.('❌ 비밀번호가 올바르지 않습니다.');
+      this.currentInput = '';
+      this.updatePinDisplay();
+      return false;
+    }
+  }
+
+  // 잠금 오버레이 표시
+  showLockOverlay() {
+    this.isLocked = true;
+    const overlay = document.getElementById('authLockOverlay');
+    if (overlay) {
+      overlay.classList.add('active');
+      overlay.style.display = 'flex';
+      this.currentInput = '';
+      this.updatePinDisplay();
+      
+      const pinInput = document.getElementById('authPasswordInput');
+      if (pinInput) {
+        pinInput.value = '';
+        setTimeout(() => pinInput.focus(), 150);
+      }
+
+      // 힌트 표시
+      const hintEl = document.getElementById('authHintText');
+      if (hintEl) {
+        if (this.authConfig.hint) {
+          hintEl.textContent = `💡 힌트: ${this.authConfig.hint}`;
+          hintEl.style.display = 'block';
+        } else {
+          hintEl.style.display = 'none';
+        }
+      }
+    }
+  }
+
+  // 잠금 오버레이 숨김
+  hideLockOverlay() {
+    this.isLocked = false;
+    const overlay = document.getElementById('authLockOverlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      setTimeout(() => {
+        if (!this.isLocked) {
+          overlay.style.display = 'none';
+        }
+      }, 250);
+    }
+  }
+
+  // 키패드 입력 업데이트
+  inputDigit(digit) {
+    if (this.currentInput.length < 12) {
+      this.currentInput += digit;
+      this.updatePinDisplay();
+
+      // 등록된 비밀번호 길이와 같아졌을 때 자동 검증
+      const storedPin = this.decodePin(this.authConfig.pin || '');
+      if (storedPin && this.currentInput.length === storedPin.length) {
+        setTimeout(() => {
+          this.unlock();
+        }, 100);
+      }
+    }
+  }
+
+  // 키패드 백스페이스
+  backspace() {
+    if (this.currentInput.length > 0) {
+      this.currentInput = this.currentInput.slice(0, -1);
+      this.updatePinDisplay();
+    }
+  }
+
+  // 키패드 전체 삭제
+  clearInput() {
+    this.currentInput = '';
+    this.updatePinDisplay();
+  }
+
+  // PIN 디스플레이 갱신
+  updatePinDisplay() {
+    const dotsContainer = document.getElementById('authPinDots');
+    const inputEl = document.getElementById('authPasswordInput');
+    
+    if (inputEl) {
+      inputEl.value = this.currentInput;
+    }
+
+    if (dotsContainer) {
+      const storedPin = this.decodePin(this.authConfig.pin || '');
+      const dotCount = Math.max(4, storedPin.length || 4);
+      let dotsHtml = '';
+      for (let i = 0; i < dotCount; i++) {
+        if (i < this.currentInput.length) {
+          dotsHtml += '<div class="pin-dot filled"></div>';
+        } else {
+          dotsHtml += '<div class="pin-dot"></div>';
+        }
+      }
+      dotsContainer.innerHTML = dotsHtml;
+    }
+  }
+
+  // 오류 시 흔들림 애니메이션
+  triggerShakeAnimation() {
+    const card = document.querySelector('.auth-card');
+    if (card) {
+      card.classList.remove('shake-anim');
+      void card.offsetWidth;
+      card.classList.add('shake-anim');
+      if (navigator.vibrate) navigator.vibrate(200);
+    }
+  }
+
+  // 설정 화면 UI 렌더링
+  renderSettingsUI() {
+    const statusTextEl = document.getElementById('authStatusBadge');
+    const btnSetPw = document.getElementById('btnSetPassword');
+    const btnDisablePw = document.getElementById('btnDisablePassword');
+
+    if (!statusTextEl) return;
+
+    if (this.hasPassword()) {
+      statusTextEl.innerHTML = '<span class="badge badge-present" style="font-size:0.8rem; padding:4px 10px;">🔒 비밀번호 사용 중</span>';
+      if (btnSetPw) btnSetPw.textContent = '비밀번호 변경';
+      if (btnDisablePw) btnDisablePw.style.display = 'inline-flex';
+    } else {
+      statusTextEl.innerHTML = '<span class="badge" style="background:#f1f5f9; color:#64748b; font-size:0.8rem; padding:4px 10px;">🔓 비밀번호 미사용</span>';
+      if (btnSetPw) btnSetPw.textContent = '비밀번호 설정하기';
+      if (btnDisablePw) btnDisablePw.style.display = 'none';
+    }
+  }
+
+  // 비밀번호 설정/변경 모달 열기
+  openPasswordModal(mode = 'create') {
+    const modal = document.getElementById('passwordSettingsModal');
+    const form = document.getElementById('passwordSettingsForm');
+    const currentGroup = document.getElementById('currentPasswordGroup');
+    const modalTitle = document.getElementById('passwordModalTitle');
+
+    if (!modal || !form) return;
+
+    form.reset();
+
+    if (this.hasPassword()) {
+      modalTitle.textContent = '비밀번호 변경';
+      if (currentGroup) currentGroup.style.display = 'block';
+      const currInput = document.getElementById('modalCurrentPassword');
+      if (currInput) currInput.required = true;
+    } else {
+      modalTitle.textContent = '비밀번호 설정';
+      if (currentGroup) currentGroup.style.display = 'none';
+      const currInput = document.getElementById('modalCurrentPassword');
+      if (currInput) currInput.required = false;
+    }
+
+    modal.classList.add('active');
+  }
+
+  // 비밀번호 설정/변경 모달 닫기
+  closePasswordModal() {
+    const modal = document.getElementById('passwordSettingsModal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  // 비밀번호 저장 처리
+  handleSavePassword(e) {
+    e.preventDefault();
+    const currInput = document.getElementById('modalCurrentPassword');
+    const newInput = document.getElementById('modalNewPassword');
+    const confirmInput = document.getElementById('modalConfirmPassword');
+    const hintInput = document.getElementById('modalPasswordHint');
+
+    const newPw = (newInput?.value || '').trim();
+    const confirmPw = (confirmInput?.value || '').trim();
+    const hint = (hintInput?.value || '').trim();
+
+    // 기존 비밀번호 검증 (이미 설정되어 있는 경우)
+    if (this.hasPassword()) {
+      const currPw = (currInput?.value || '').trim();
+      if (!this.verifyPassword(currPw)) {
+        alert('현재 비밀번호가 일치하지 않습니다.');
+        currInput?.focus();
+        return;
+      }
+    }
+
+    if (!newPw) {
+      alert('새 비밀번호를 입력해주세요.');
+      newInput?.focus();
+      return;
+    }
+
+    if (newPw.length < 4) {
+      alert('비밀번호는 최소 4자리 이상으로 설정해주세요.');
+      newInput?.focus();
+      return;
+    }
+
+    if (newPw !== confirmPw) {
+      alert('새 비밀번호와 확인 입력이 일치하지 않습니다.');
+      confirmInput?.focus();
+      return;
+    }
+
+    // 저장
+    this.authConfig = {
+      enabled: true,
+      pin: this.encodePin(newPw),
+      hint: hint,
+      updatedAt: new Date().toISOString()
+    };
+    this.saveAuthConfig();
+    sessionStorage.setItem(AUTH_SESSION_KEY, 'true');
+
+    this.closePasswordModal();
+    window.showToast?.('✅ 비밀번호가 성공적으로 저장되었습니다.');
+  }
+
+  // 비밀번호 해제 (사용 안 함)
+  disablePassword() {
+    if (!this.hasPassword()) return;
+
+    const inputPw = prompt('비밀번호 보호를 해제하려면 현재 비밀번호를 입력하세요:');
+    if (inputPw === null) return;
+
+    if (this.verifyPassword(inputPw)) {
+      this.authConfig = {
+        enabled: false,
+        pin: '',
+        hint: '',
+        updatedAt: new Date().toISOString()
+      };
+      this.saveAuthConfig();
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      this.hideLockOverlay();
+      window.showToast?.('🔓 비밀번호 보호가 해제되었습니다.');
+    } else {
+      alert('비밀번호가 일치하지 않아 해제할 수 없습니다.');
+    }
+  }
+
+  // 이벤트 바인딩
+  bindEvents() {
+    // 1. 상단 헤더 자물쇠 버튼
+    const headerLockBtn = document.getElementById('btnAppLock');
+    if (headerLockBtn) {
+      headerLockBtn.addEventListener('click', () => {
+        if (this.hasPassword()) {
+          this.lock();
+        } else {
+          this.openPasswordModal('create');
+        }
+      });
+    }
+
+    // 2. 키패드 숫자 버튼
+    document.querySelectorAll('.auth-key-btn[data-num]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const num = btn.getAttribute('data-num');
+        this.inputDigit(num);
+      });
+    });
+
+    // 3. 키패드 백스페이스 & 클리어
+    document.getElementById('authKeyBackspace')?.addEventListener('click', () => {
+      this.backspace();
+    });
+    document.getElementById('authKeyClear')?.addEventListener('click', () => {
+      this.clearInput();
+    });
+
+    // 4. 키보드 비밀번호 입력창 엔터 키 지원
+    const pwInput = document.getElementById('authPasswordInput');
+    if (pwInput) {
+      pwInput.addEventListener('input', (e) => {
+        this.currentInput = e.target.value;
+        this.updatePinDisplay();
+      });
+      pwInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.unlock();
+        }
+      });
+    }
+
+    // 5. 잠금 해제 확인 버튼
+    document.getElementById('btnAuthUnlock')?.addEventListener('click', () => {
+      this.unlock();
+    });
+
+    // 6. 설정 탭 내 버튼들
+    document.getElementById('btnSetPassword')?.addEventListener('click', () => {
+      this.openPasswordModal();
+    });
+    document.getElementById('btnDisablePassword')?.addEventListener('click', () => {
+      this.disablePassword();
+    });
+    document.getElementById('btnLockNowSettings')?.addEventListener('click', () => {
+      this.lock();
+    });
+
+    // 7. 비밀번호 설정 모달 제출
+    document.getElementById('passwordSettingsForm')?.addEventListener('submit', (e) => {
+      this.handleSavePassword(e);
+    });
+
+    // 8. 잠금 화면에서 키오스크 모드로 바로가기
+    document.getElementById('btnAuthGoKiosk')?.addEventListener('click', () => {
+      this.hideLockOverlay();
+      window.App?.switchTab('kiosk');
+      window.showToast?.('📱 학생 셀프 출석 키오스크 모드로 진입했습니다.');
+    });
+  }
+}
+
+// 전역 인스턴스 등록
+window.AuthManager = new AuthManager();
 
 
 
@@ -4621,6 +5380,7 @@ const App = {
     this.bindReportEvents();
 
     // 하위 모듈 초기화
+    window.AuthManager?.init();
     window.AttendanceManager?.init();
     window.StudentsManager?.init();
     window.IndividualAttendanceManager?.init();
@@ -4716,6 +5476,12 @@ const App = {
   },
 
   switchTab(tabName) {
+    // 키오스크가 아닌 관리자 탭 진입 시 비밀번호 잠금 체크
+    if (tabName !== 'kiosk' && window.AuthManager?.hasPassword() && !window.AuthManager?.isSessionAuthenticated()) {
+      window.AuthManager.showLockOverlay();
+      return;
+    }
+
     this.currentTab = tabName;
 
     // 1. 탭 버튼 활성화 상태 변경
