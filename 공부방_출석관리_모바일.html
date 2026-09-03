@@ -2215,7 +2215,8 @@ class DataStore {
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
 
     if (att) {
-      if (!Array.isArray(att.sessions)) {
+      // 1. sessions 배열 보정
+      if (!Array.isArray(att.sessions) || att.sessions.length === 0) {
         att.sessions = [];
         if (att.checkIn) {
           att.sessions.push({
@@ -2226,14 +2227,14 @@ class DataStore {
         }
       }
 
-      // 현재 아직 퇴실하지 않은 열린 세션이 있는지 확인
-      const openSession = att.sessions.find(s => !s.out);
-      if (openSession) {
-        // 이미 입실 중이면 입실 시간 갱신
-        openSession.in = time;
-        att.checkIn = time;
-      } else {
-        // 이미 하원 완료된 상태에서 다시 입실하는 경우 (하루 2회차 이상 수업)
+      // 2. 이미 하원 완료(checkOut이 존재) 상태인 경우 -> 새 세션 무조건 추가 및 재실 상태로 전환
+      if (att.checkOut) {
+        att.sessions.forEach(s => {
+          if (!s.out) {
+            s.out = att.checkOut;
+            s.duration = calculateDurationMinutes(s.in, s.out);
+          }
+        });
         att.sessions.push({
           in: time,
           out: null,
@@ -2241,11 +2242,20 @@ class DataStore {
         });
         att.checkIn = time;
         att.checkOut = null; // 재실 중 상태로 전환!
+      } else {
+        // 이미 재실 중(checkOut이 null)인 상태에서 입실 시간 재설정
+        const openSession = att.sessions.find(s => !s.out);
+        if (openSession) {
+          openSession.in = time;
+        } else {
+          att.sessions.push({ in: time, out: null, duration: 0 });
+        }
+        att.checkIn = time;
       }
       att.status = 'present';
     } else {
       att = {
-        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
         studentId: studentId,
         date: dateStr,
         checkIn: time,
@@ -2269,13 +2279,13 @@ class DataStore {
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
 
     if (att) {
-      if (!Array.isArray(att.sessions)) {
+      if (!Array.isArray(att.sessions) || att.sessions.length === 0) {
         att.sessions = [];
         if (att.checkIn) {
           att.sessions.push({
             in: att.checkIn,
-            out: att.checkOut || null,
-            duration: att.durationMinutes || 0
+            out: null,
+            duration: 0
           });
         }
       }
@@ -2302,7 +2312,7 @@ class DataStore {
     } else {
       // 입실 기록 없이 퇴실하는 경우
       att = {
-        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
         studentId: studentId,
         date: dateStr,
         checkIn: time,
@@ -2326,7 +2336,7 @@ class DataStore {
     this.saveAttendances();
   }
 
-  // 출결 수동 변경 (시간, 상태, 메모 수정)
+  // 출결 수동 변경 (시간, 상태, 메모 수정) - 세션 동기화 보장
   updateAttendanceRecord(id, updateData) {
     const index = this.attendances.findIndex(a => a.id === id);
     if (index !== -1) {
@@ -2339,11 +2349,31 @@ class DataStore {
         durationMinutes = calculateDurationMinutes(checkIn, checkOut);
       }
 
+      // 세션 배열 동기화
+      let sessions = Array.isArray(att.sessions) ? [...att.sessions] : [];
+      if (checkIn) {
+        if (sessions.length === 0) {
+          sessions = [{
+            in: checkIn,
+            out: checkOut || null,
+            duration: durationMinutes
+          }];
+        } else {
+          const lastIdx = sessions.length - 1;
+          sessions[lastIdx].in = checkIn;
+          sessions[lastIdx].out = checkOut || null;
+          sessions[lastIdx].duration = (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0;
+          // 전체 누적 계산
+          durationMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        }
+      }
+
       this.attendances[index] = {
         ...att,
         ...updateData,
         checkIn,
         checkOut,
+        sessions,
         durationMinutes
       };
       this.saveAttendances();
