@@ -3,7 +3,7 @@
  * 완전 오프라인 지원: 인터넷이 전혀 없어도 100% 정상 작동
  */
 
-const CACHE_NAME = 'educheck-cache-v1';
+const CACHE_NAME = 'educheck-cache-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -11,8 +11,9 @@
   <meta name="application-name" content="공부방 출석관리">
   <title>공부방 스마트 출석관리 - EduCheck</title>
 
-  <!-- PWA Manifest Data URI -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"공부방 출석관리","short_name":"출석관리","start_url":".","display":"standalone","background_color":"#ffffff","theme_color":"#4f46e5"}'>
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
 
   <!-- Google Font & Pretendard -->
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
@@ -1513,86 +1514,13 @@ body {
  */
 
 const STORAGE_KEYS = {
-  STUDENTS: 'educheck_students_v1',
-  ATTENDANCE: 'educheck_attendance_v1',
-  SETTINGS: 'educheck_settings_v1'
+  STUDENTS: 'educheck_students_v2',
+  ATTENDANCE: 'educheck_attendance_v2',
+  SETTINGS: 'educheck_settings_v2'
 };
 
-// 기본 샘플 학생 데이터 (초·중·고 공부방 환경)
-const INITIAL_STUDENTS = [
-  {
-    id: 'std-1',
-    name: '김민준',
-    level: '초등', // 초등, 중등, 고등
-    grade: '초5',
-    phone: '010-1234-5678',
-    parentPhone: '010-9876-5432',
-    phoneLast4: '5678',
-    weeklyTargetHours: 8,
-    memo: '평일 월/수/금 위주 17:00 등원, 수학 집중',
-    createdAt: '2026-08-01'
-  },
-  {
-    id: 'std-2',
-    name: '이서연',
-    level: '중등',
-    grade: '중2',
-    phone: '010-2345-6789',
-    parentPhone: '010-8765-4321',
-    phoneLast4: '6789',
-    weeklyTargetHours: 12,
-    memo: '화/목 18:30 등원, 주말 오전 보강 자주 있음',
-    createdAt: '2026-08-05'
-  },
-  {
-    id: 'std-3',
-    name: '박도윤',
-    level: '중등',
-    grade: '중3',
-    phone: '010-3456-7890',
-    parentPhone: '010-7654-3210',
-    phoneLast4: '7890',
-    weeklyTargetHours: 15,
-    memo: '내신 대비 매일 2~3시간 자율학습',
-    createdAt: '2026-08-10'
-  },
-  {
-    id: 'std-4',
-    name: '최지우',
-    level: '고등',
-    grade: '고1',
-    phone: '010-4567-8901',
-    parentPhone: '010-6543-2109',
-    phoneLast4: '8901',
-    weeklyTargetHours: 20,
-    memo: '평일 야자 후 20:00 등원, 주말 집중형',
-    createdAt: '2026-08-12'
-  },
-  {
-    id: 'std-5',
-    name: '정예준',
-    level: '고등',
-    grade: '고2',
-    phone: '010-5678-9012',
-    parentPhone: '010-5432-1098',
-    phoneLast4: '9012',
-    weeklyTargetHours: 18,
-    memo: '주말 10:00~18:00 종일 학습 선호',
-    createdAt: '2026-08-15'
-  },
-  {
-    id: 'std-6',
-    name: '한수아',
-    level: '초등',
-    grade: '초6',
-    phone: '010-6789-0123',
-    parentPhone: '010-4321-0987',
-    phoneLast4: '0123',
-    weeklyTargetHours: 6,
-    memo: '영어/수학 기초 다지기, 화/금 17:30',
-    createdAt: '2026-08-20'
-  }
-];
+// 초기 학생 데이터 (빈 상태)
+const INITIAL_STUDENTS = [];
 
 // 오늘 날짜 문자열 (YYYY-MM-DD)
 function getTodayString() {
@@ -1645,20 +1573,20 @@ class DataStore {
   }
 
   init() {
-    // 1. 학생 데이터 로드 또는 초기화
+    // 1. 학생 데이터 로드 (초기 빈 배열)
     const savedStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
     if (savedStudents) {
       try {
         this.students = JSON.parse(savedStudents);
       } catch (e) {
-        this.students = INITIAL_STUDENTS;
+        this.students = [];
       }
     } else {
-      this.students = INITIAL_STUDENTS;
+      this.students = [];
       this.saveStudents();
     }
 
-    // 2. 출결 데이터 로드
+    // 2. 출결 데이터 로드 (초기 빈 배열)
     const savedAttendances = localStorage.getItem(STORAGE_KEYS.ATTENDANCE);
     if (savedAttendances) {
       try {
@@ -1667,40 +1595,7 @@ class DataStore {
         this.attendances = [];
       }
     } else {
-      // 오늘 날짜 샘플 출결 몇 개 생성
-      const today = getTodayString();
-      this.attendances = [
-        {
-          id: 'att-1',
-          studentId: 'std-1',
-          date: today,
-          checkIn: '17:05',
-          checkOut: null, // 현재 재실 중
-          status: 'present',
-          durationMinutes: 0,
-          memo: '정시 등원'
-        },
-        {
-          id: 'att-2',
-          studentId: 'std-2',
-          date: today,
-          checkIn: '17:30',
-          checkOut: '19:45',
-          status: 'present',
-          durationMinutes: 135,
-          memo: '수학 숙제 완료 후 하원'
-        },
-        {
-          id: 'att-3',
-          studentId: 'std-3',
-          date: today,
-          checkIn: '18:10',
-          checkOut: null, // 현재 재실 중
-          status: 'present',
-          durationMinutes: 0,
-          memo: '자율학습'
-        }
-      ];
+      this.attendances = [];
       this.saveAttendances();
     }
 
@@ -3527,6 +3422,15 @@ window.showToast = (message) => {
 
 window.App = App;
 
+
+// PWA Service Worker 등록 (오프라인 지원)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker Registered!', reg.scope))
+      .catch(err => console.warn('Service Worker registration failed:', err));
+  });
+}
   </script>
 
 </body>
