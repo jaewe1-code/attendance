@@ -562,23 +562,12 @@ const IndividualAttendanceManager = {
     if (window.AttendanceManager && window.AttendanceManager.openDirectEditModal) {
       window.AttendanceManager.openDirectEditModal(studentId, dateStr);
     } else {
-      // 대체 구현: attendanceEditModal 직접 띄우기
       const student = window.store.getStudentById(studentId);
       if (!student) return;
       const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
-
-      const modal = document.getElementById('attendanceEditModal');
-      if (!modal) return;
-
-      document.getElementById('editStudentId').value = student.id;
-      document.getElementById('editDate').value = dateStr;
-      document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
-      document.getElementById('editCheckIn').value = att ? (att.checkIn || '') : '14:00';
-      document.getElementById('editCheckOut').value = att ? (att.checkOut || '') : '16:00';
-      document.getElementById('editStatus').value = att ? (att.status || 'present') : 'present';
-      document.getElementById('editMemo').value = att ? (att.memo || '') : '';
-
-      modal.classList.add('active');
+      if (window.AttendanceManager && window.AttendanceManager.populateEditModal) {
+        window.AttendanceManager.populateEditModal(student, att, dateStr);
+      }
     }
   },
 

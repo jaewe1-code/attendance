@@ -11,8 +11,11 @@ const NotificationManager = {
     const today = attendance ? attendance.date : window.getTodayString();
 
     if (type === 'checkIn') {
-      const time = attendance?.checkIn || window.getCurrentTimeString();
-      return `[공부방 등원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 ${time}에 공부방에 안전하게 도착하여 학습을 시작하였습니다.`;
+      const sNum = attendance?.sessions?.length || 1;
+      const sPrefix = sNum > 1 ? `${sNum}차 ` : '';
+      const openSession = attendance?.sessions?.find(s => !s.out);
+      const time = openSession?.in || attendance?.checkIn || window.getCurrentTimeString();
+      return `[공부방 ${sPrefix}등원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 ${time}에 공부방에 안전하게 도착하여 ${sPrefix}학습을 시작하였습니다.`;
     } else if (type === 'checkOut') {
       const checkInTime = attendance?.checkIn || '-';
       const checkOutTime = attendance?.checkOut || window.getCurrentTimeString();
@@ -27,7 +30,14 @@ const NotificationManager = {
         durationStr = '확인중';
       }
 
-      return `[공부방 하원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 학습을 마치고 ${checkOutTime}에 하원하였습니다.\n- 등원: ${checkInTime}\n- 하원: ${checkOutTime}\n- 총 학습시간: ${durationStr}\n오늘도 수고 많았습니다.`;
+      let sessionDetail = '';
+      if (attendance?.sessions && attendance.sessions.length > 1) {
+        sessionDetail = '\n' + attendance.sessions.map((s, idx) => 
+          `- ${idx+1}차: ${s.in || '-'}~${s.out || '-'} (${s.duration ? window.formatMinutesToKorean(s.duration) : '-'})`
+        ).join('\n');
+      }
+
+      return `[공부방 하원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 학습을 마치고 ${checkOutTime}에 하원하였습니다.\n- 최초등원: ${checkInTime}\n- 최종하원: ${checkOutTime}${sessionDetail}\n- 오늘 총 학습시간: ${durationStr}\n오늘도 수고 많았습니다.`;
     } else if (type === 'status') {
       const statusText = attendance?.status === 'late' ? '지각' : 
                          attendance?.status === 'absent' ? '결석' : 

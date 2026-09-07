@@ -97,6 +97,7 @@ const KioskManager = {
   // 출석/퇴실 확인 팝업
   showCheckPrompt(student) {
     const today = window.getTodayString();
+    const att = window.store.getTodayAttendanceForStudent(student.id, today);
     const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
     const isFinished = att && att.checkIn && att.checkOut && att.status !== 'absent';
 
@@ -108,30 +109,54 @@ const KioskManager = {
 
     const actionContainer = document.getElementById('kioskActionButtons');
     if (!isStudying) {
-      const nextSession = isFinished ? (att.sessions?.length || 1) + 1 : 1;
-      const btnText = isFinished ? `${nextSession}차 [다시 입실 (등원)] 하기` : '지금 [입실 (등원)] 하기';
-      const prevInfo = isFinished ? `
-        <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:0.82rem; color:var(--text-muted);">
-          ℹ️ 오늘 이전 수업: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> 학습 완료
-        </div>
-      ` : '';
-
-      actionContainer.innerHTML = `
-        ${prevInfo}
-        <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
-          <i data-lucide="log-in"></i> ${btnText}
-        </button>
-      `;
+      const sessionCount = att?.sessions?.length || (isFinished ? 1 : 0);
+      
+      // 이미 2회(2차 퇴실)까지 완료한 경우 -> 3차 입실 제한 및 완료 안내
+      if (isFinished && sessionCount >= 2) {
+        actionContainer.innerHTML = `
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; padding:14px; border-radius:12px; margin-bottom:12px; font-size:0.9rem; color:#065f46; text-align:center;">
+            🎉 <strong>오늘 2회 수업을 모두 마쳤습니다!</strong><br>
+            <span style="font-size:0.82rem; color:#047857; margin-top:4px; display:inline-block;">
+              총 학습시간: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> (수고 많았습니다)
+            </span>
+          </div>
+          <button class="btn btn-outline btn-lg btn-full" onclick="KioskManager.closeModal()">
+            <i data-lucide="check"></i> 확인
+          </button>
+        `;
+      } else if (isFinished && sessionCount === 1) {
+        // 1차 하원 완료 상태 -> 2차 다시 입실 버튼 노출
+        const prevInfo = `
+          <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:0.82rem; color:var(--text-muted);">
+            ℹ️ 1차 수업: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> 학습 완료
+          </div>
+        `;
+        actionContainer.innerHTML = `
+          ${prevInfo}
+          <button class="btn btn-primary btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')" style="background:#4f46e5;">
+            <i data-lucide="log-in"></i> 2차 [다시 입실 (등원)] 하기
+          </button>
+        `;
+      } else {
+        // 첫 입실
+        actionContainer.innerHTML = `
+          <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
+            <i data-lucide="log-in"></i> 지금 [입실 (등원)] 하기
+          </button>
+        `;
+      }
     } else {
       const nowTime = window.getCurrentTimeString();
-      const mins = window.calculateDurationMinutes(att.checkIn, nowTime);
+      const openSession = att.sessions?.find(s => !s.out);
+      const curInTime = openSession?.in || att.checkIn || nowTime;
+      const mins = window.calculateDurationMinutes(curInTime, nowTime);
       const sNum = att.sessions?.length || 1;
       const sText = sNum > 1 ? `${sNum}차 ` : '';
       const totalAccum = (att.durationMinutes || 0) + mins;
 
       actionContainer.innerHTML = `
         <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.88rem;">
-          ${sText}등원시간: <strong>${att.checkIn}</strong><br>
+          ${sText}등원시간: <strong>${curInTime}</strong><br>
           현재 세션 학습: <strong style="color:var(--primary);">${window.formatMinutesToKorean(mins)}</strong>
           ${sNum > 1 ? `<br>오늘 총 누적 예상: <strong>${window.formatMinutesToKorean(totalAccum)}</strong>` : ''}
         </div>

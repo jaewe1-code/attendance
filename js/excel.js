@@ -46,7 +46,12 @@ const ExcelManager = {
           const currentM = window.calculateDurationMinutes(att.checkIn, window.getCurrentTimeString());
           durationStr = `${window.formatMinutesToKorean(currentM)} (진행중)`;
         }
-        memo = att.memo || '';
+        
+        let sessionNotes = '';
+        if (att.sessions && att.sessions.length > 1) {
+          sessionNotes = att.sessions.map((s, i) => `[${i+1}차] ${s.in || '-'}~${s.out || '-'}`).join(', ');
+        }
+        memo = [sessionNotes, att.memo].filter(Boolean).join(' | ');
       }
 
       rows.push([
@@ -333,7 +338,11 @@ const ExcelManager = {
           totalMinutes += att.durationMinutes;
           durationStr = window.formatMinutesToKorean(att.durationMinutes);
         }
-        memo = att.memo || '';
+        let sessionNotes = '';
+        if (att.sessions && att.sessions.length > 1) {
+          sessionNotes = att.sessions.map((s, i) => `[${i+1}차] ${s.in || '-'}~${s.out || '-'}`).join(', ');
+        }
+        memo = [sessionNotes, att.memo].filter(Boolean).join(' | ');
       }
 
       rows.push([

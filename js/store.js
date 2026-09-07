@@ -146,6 +146,10 @@ class DataStore {
             modified = true;
           }
         }
+        if (Array.isArray(att.sessions) && att.sessions.length > 2) {
+          att.sessions = att.sessions.slice(0, 2);
+          modified = true;
+        }
         attendanceMap.set(key, att);
         cleanedAttendances.push(att);
       } else {
@@ -160,8 +164,13 @@ class DataStore {
             duration: att.durationMinutes || 0
           });
         }
-        if (att.checkIn && !existing.checkIn) existing.checkIn = att.checkIn;
-        if (att.checkOut && !existing.checkOut) existing.checkOut = att.checkOut;
+        if (existing.sessions.length > 2) {
+          existing.sessions = existing.sessions.slice(0, 2);
+        }
+        if (existing.sessions.length > 0) {
+          existing.checkIn = existing.sessions[0].in;
+          existing.checkOut = existing.sessions[existing.sessions.length - 1].out;
+        }
         existing.durationMinutes = (existing.sessions || []).reduce((sum, s) => sum + (s.duration || 0), 0);
         modified = true;
       }
@@ -347,7 +356,7 @@ class DataStore {
     return this.attendances.find(a => a.studentId === studentId && a.date === dateStr);
   }
 
-  // 입실 (Check-in) - 다회차 입퇴실 완벽 지원
+  // 입실 (Check-in) - 최대 2회차(2차 재입실)까지 지원
   checkInStudent(studentId, customTime = null, dateStr = getTodayString()) {
     const time = customTime || getCurrentTimeString();
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
@@ -365,31 +374,43 @@ class DataStore {
         }
       }
 
-      // 2. 이미 하원 완료(checkOut이 존재) 상태인 경우 -> 새 세션 무조건 추가 및 재실 상태로 전환
+      // 2. 이미 하원 완료(checkOut이 존재) 상태인 경우
       if (att.checkOut) {
+        // 이미 2차 퇴실까지 완료된 경우 (최대 2회차 제한)
+        if (att.sessions.length >= 2) {
+          console.warn('CheckIn: Maximum 2 sessions reached for student', studentId);
+          return att;
+        }
+
+        // 이전 세션 닫기 확인
         att.sessions.forEach(s => {
           if (!s.out) {
             s.out = att.checkOut;
             s.duration = calculateDurationMinutes(s.in, s.out);
           }
         });
+
+        // 2차 재입실 세션 추가 (최대 2회차)
         att.sessions.push({
           in: time,
           out: null,
           duration: 0
         });
-        att.checkIn = time;
         att.checkOut = null; // 재실 중 상태로 전환!
       } else {
-        // 이미 재실 중(checkOut이 null)인 상태에서 입실 시간 재설정
+        // 이미 재실 중인 상태에서 입실 시간 재설정
         const openSession = att.sessions.find(s => !s.out);
         if (openSession) {
           openSession.in = time;
         } else {
-          att.sessions.push({ in: time, out: null, duration: 0 });
+          if (att.sessions.length < 2) {
+            att.sessions.push({ in: time, out: null, duration: 0 });
+          }
         }
-        att.checkIn = time;
       }
+
+      // 최초 등원시간 유지
+      att.checkIn = att.sessions[0]?.in || time;
       att.status = 'present';
     } else {
       att = {
@@ -434,7 +455,6 @@ class DataStore {
         openSession.out = time;
         openSession.duration = calculateDurationMinutes(openSession.in, time);
       } else if (att.sessions.length > 0) {
-        // 열린 세션이 없으면 마지막 세션 퇴실 시간 갱신
         const lastSession = att.sessions[att.sessions.length - 1];
         lastSession.out = time;
         lastSession.duration = calculateDurationMinutes(lastSession.in, time);
@@ -442,6 +462,12 @@ class DataStore {
         att.sessions.push({ in: att.checkIn || time, out: time, duration: 0 });
       }
 
+      // 최대 2회차 초과 세션 정리
+      if (att.sessions.length > 2) {
+        att.sessions = att.sessions.slice(0, 2);
+      }
+
+      att.checkIn = att.sessions[0]?.in || att.checkIn || time;
       att.checkOut = time;
       // 전체 세션 누적 시간 합산
       att.durationMinutes = att.sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
@@ -474,45 +500,58 @@ class DataStore {
     this.saveAttendances();
   }
 
-  // 출결 수동 변경 (시간, 상태, 메모 수정) - 세션 동기화 보장
+  // 출결 수동 변경 (시간, 상태, 메모 수정) - 1차/2차 세션 완벽 동기화 보장
   updateAttendanceRecord(id, updateData) {
     const index = this.attendances.findIndex(a => a.id === id);
     if (index !== -1) {
       const att = this.attendances[index];
-      const checkIn = updateData.checkIn !== undefined ? updateData.checkIn : att.checkIn;
-      const checkOut = updateData.checkOut !== undefined ? updateData.checkOut : att.checkOut;
       
-      let durationMinutes = 0;
-      if (checkIn && checkOut) {
-        durationMinutes = calculateDurationMinutes(checkIn, checkOut);
-      }
-
-      // 세션 배열 동기화
-      let sessions = Array.isArray(att.sessions) ? [...att.sessions] : [];
-      if (checkIn) {
-        if (sessions.length === 0) {
-          sessions = [{
-            in: checkIn,
-            out: checkOut || null,
-            duration: durationMinutes
-          }];
-        } else {
-          const lastIdx = sessions.length - 1;
-          sessions[lastIdx].in = checkIn;
-          sessions[lastIdx].out = checkOut || null;
-          sessions[lastIdx].duration = (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0;
-          // 전체 누적 계산
-          durationMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+      let sessions = [];
+      if (Array.isArray(updateData.sessions)) {
+        // sessions 배열이 직접 전달된 경우 (최대 2회차)
+        sessions = updateData.sessions.slice(0, 2).map(s => {
+          const inTime = s.in ? s.in.trim() : null;
+          const outTime = s.out ? s.out.trim() : null;
+          const dur = (inTime && outTime) ? calculateDurationMinutes(inTime, outTime) : 0;
+          return {
+            in: inTime,
+            out: outTime,
+            duration: dur
+          };
+        }).filter(s => s.in || s.out);
+      } else {
+        // 기존 checkIn / checkOut 단일 필드로 넘어온 경우
+        const checkIn = updateData.checkIn !== undefined ? updateData.checkIn : att.checkIn;
+        const checkOut = updateData.checkOut !== undefined ? updateData.checkOut : att.checkOut;
+        sessions = Array.isArray(att.sessions) ? [...att.sessions] : [];
+        if (checkIn) {
+          if (sessions.length === 0) {
+            sessions = [{
+              in: checkIn,
+              out: checkOut || null,
+              duration: (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0
+            }];
+          } else {
+            const lastIdx = sessions.length - 1;
+            sessions[lastIdx].in = checkIn;
+            sessions[lastIdx].out = checkOut || null;
+            sessions[lastIdx].duration = (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0;
+          }
         }
       }
+
+      const totalDuration = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+      const firstIn = sessions[0]?.in || updateData.checkIn || null;
+      const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+      const lastOut = lastSession ? lastSession.out : (updateData.checkOut || null);
 
       this.attendances[index] = {
         ...att,
         ...updateData,
-        checkIn,
-        checkOut,
+        checkIn: firstIn,
+        checkOut: lastOut,
         sessions,
-        durationMinutes
+        durationMinutes: totalDuration
       };
       this.saveAttendances();
       return this.attendances[index];

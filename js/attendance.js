@@ -263,7 +263,7 @@ const AttendanceManager = {
         ).join(' ');
       }
 
-      // 액션 버튼 (미출석 -> 입실, 재실 -> 퇴실, 하원완료 -> 재입실 가능!)
+      // 액션 버튼 (미출석 -> 입실, 재실 -> 퇴실, 하원완료 -> 2차 재입실 가능, 2회 완료 시 마감!)
       let actionBtnHtml = '';
       if (isStudying) {
         const sNum = att.sessions?.length || 1;
@@ -274,12 +274,22 @@ const AttendanceManager = {
           </button>
         `;
       } else if (isFinished) {
-        const nextNum = (att.sessions?.length || 1) + 1;
-        actionBtnHtml = `
-          <button class="btn btn-primary btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')" style="background: #4f46e5;">
-            <i data-lucide="log-in"></i> ${nextNum}차 재입실
-          </button>
-        `;
+        const sessionCount = att.sessions?.length || 1;
+        if (sessionCount < 2) {
+          // 1차만 마친 경우 -> 2차 재입실 버튼 노출
+          actionBtnHtml = `
+            <button class="btn btn-primary btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')" style="background: #4f46e5;">
+              <i data-lucide="log-in"></i> 2차 재입실
+            </button>
+          `;
+        } else {
+          // 2차까지 완료된 경우 -> 3차 재입실 버튼 노출하지 않고 완료 표시 (최대 2회)
+          actionBtnHtml = `
+            <button class="btn btn-outline btn-sm" style="color: var(--success-hover); border-color: #86efac; background: #f0fdf4; cursor: default; font-weight: 600;">
+              <i data-lucide="check-check"></i> 오늘 수업 완료 (2회)
+            </button>
+          `;
+        }
       } else {
         actionBtnHtml = `
           <button class="btn btn-success btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')">
@@ -359,24 +369,54 @@ const AttendanceManager = {
     if (window.lucide) window.lucide.createIcons();
   },
 
+  // 출결 수정 모달에 데이터 바인딩 (공통 헬퍼)
+  populateEditModal(student, att, dateStr) {
+    const modal = document.getElementById('attendanceEditModal');
+    if (!modal) return;
+
+    document.getElementById('editStudentId').value = student.id;
+    document.getElementById('editStudentName').textContent = `${student.name} (${student.level} ${student.grade || ''}) - ${dateStr}`;
+    document.getElementById('editDate').value = dateStr;
+
+    // 1차 세션 시간 설정
+    const s1 = att?.sessions?.[0];
+    const s1In = s1?.in || att?.checkIn || '';
+    const s1Out = s1?.out || (att?.sessions?.length === 1 ? att?.checkOut : '') || '';
+    document.getElementById('editCheckIn').value = s1In;
+    document.getElementById('editCheckOut').value = s1Out;
+
+    // 2차 세션 시간 설정
+    const s2 = att?.sessions?.[1];
+    const s2Container = document.getElementById('editSession2Container');
+    const btnAddS2 = document.getElementById('btnAddSession2');
+
+    if (s2 && (s2.in || s2.out)) {
+      document.getElementById('editCheckIn2').value = s2.in || '';
+      document.getElementById('editCheckOut2').value = s2.out || '';
+      if (s2Container) s2Container.style.display = 'block';
+      if (btnAddS2) btnAddS2.style.display = 'none';
+    } else {
+      document.getElementById('editCheckIn2').value = '';
+      document.getElementById('editCheckOut2').value = '';
+      if (s2Container) s2Container.style.display = 'none';
+      if (btnAddS2) btnAddS2.style.display = 'flex';
+    }
+
+    document.getElementById('editStatus').value = att?.status || 'present';
+    document.getElementById('editMemo').value = att?.memo || '';
+
+    this.calcEditDurationPreview();
+    modal.classList.add('active');
+    if (window.lucide) window.lucide.createIcons();
+  },
+
   // 특정 날짜의 출결 직접 수정 모달 열기 (개인출석부 등에서 호출)
   openDirectEditModal(studentId, dateStr) {
     const student = window.store.getStudentById(studentId);
     if (!student) return;
 
     const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
-    const modal = document.getElementById('attendanceEditModal');
-    if (!modal) return;
-
-    document.getElementById('editStudentId').value = student.id;
-    document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
-    document.getElementById('editDate').value = dateStr;
-    document.getElementById('editCheckIn').value = att?.checkIn || '';
-    document.getElementById('editCheckOut').value = att?.checkOut || '';
-    document.getElementById('editStatus').value = att?.status || 'present';
-    document.getElementById('editMemo').value = att?.memo || '';
-
-    modal.classList.add('active');
+    this.populateEditModal(student, att, dateStr);
   },
 
   // 원터치 입실
@@ -412,18 +452,7 @@ const AttendanceManager = {
     const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
     if (!student) return;
 
-    const modal = document.getElementById('attendanceEditModal');
-    if (!modal) return;
-
-    document.getElementById('editStudentId').value = student.id;
-    document.getElementById('editStudentName').textContent = `${student.name} (${student.level} ${student.grade})`;
-    document.getElementById('editDate').value = this.selectedDate;
-    document.getElementById('editCheckIn').value = att?.checkIn || '';
-    document.getElementById('editCheckOut').value = att?.checkOut || '';
-    document.getElementById('editStatus').value = att?.status || 'present';
-    document.getElementById('editMemo').value = att?.memo || '';
-
-    modal.classList.add('active');
+    this.populateEditModal(student, att, this.selectedDate);
   },
 
   closeEditModal() {
@@ -431,13 +460,112 @@ const AttendanceManager = {
     if (modal) modal.classList.remove('active');
   },
 
+  // 모달 내 2차 세션 추가 버튼 클릭
+  addSession2InEdit() {
+    const s2Container = document.getElementById('editSession2Container');
+    const btnAddS2 = document.getElementById('btnAddSession2');
+    if (s2Container) s2Container.style.display = 'block';
+    if (btnAddS2) btnAddS2.style.display = 'none';
+
+    // 1차 하원 시간이 있으면 2차 기본값 추천 또는 포커스
+    const in2Input = document.getElementById('editCheckIn2');
+    if (in2Input && !in2Input.value) {
+      const out1 = document.getElementById('editCheckOut')?.value;
+      if (out1) in2Input.value = out1;
+      in2Input.focus();
+    }
+
+    this.calcEditDurationPreview();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 모달 내 2차 세션 삭제 버튼 클릭
+  removeSession2InEdit() {
+    const in2Input = document.getElementById('editCheckIn2');
+    const out2Input = document.getElementById('editCheckOut2');
+    if (in2Input) in2Input.value = '';
+    if (out2Input) out2Input.value = '';
+
+    const s2Container = document.getElementById('editSession2Container');
+    const btnAddS2 = document.getElementById('btnAddSession2');
+    if (s2Container) s2Container.style.display = 'none';
+    if (btnAddS2) btnAddS2.style.display = 'flex';
+
+    this.calcEditDurationPreview();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 모달 내 실시간 시간 및 누적 학습시간 계산 미리보기
+  calcEditDurationPreview() {
+    const in1 = document.getElementById('editCheckIn')?.value?.trim() || '';
+    const out1 = document.getElementById('editCheckOut')?.value?.trim() || '';
+    const dur1 = (in1 && out1) ? window.calculateDurationMinutes(in1, out1) : 0;
+
+    const s1DurEl = document.getElementById('editSession1Duration');
+    if (s1DurEl) {
+      s1DurEl.textContent = (in1 && out1) ? window.formatMinutesToKorean(dur1) : (in1 ? '진행중' : '-');
+    }
+
+    const s2Container = document.getElementById('editSession2Container');
+    const isS2Visible = s2Container && s2Container.style.display !== 'none';
+    const in2 = isS2Visible ? (document.getElementById('editCheckIn2')?.value?.trim() || '') : '';
+    const out2 = isS2Visible ? (document.getElementById('editCheckOut2')?.value?.trim() || '') : '';
+    const dur2 = (in2 && out2) ? window.calculateDurationMinutes(in2, out2) : 0;
+
+    const s2DurEl = document.getElementById('editSession2Duration');
+    if (s2DurEl) {
+      s2DurEl.textContent = (in2 && out2) ? window.formatMinutesToKorean(dur2) : (in2 ? '진행중' : '-');
+    }
+
+    const totalDur = dur1 + dur2;
+    const totalEl = document.getElementById('editTotalDurationText');
+    if (totalEl) {
+      let previewText = window.formatMinutesToKorean(totalDur);
+      if (isS2Visible && (dur1 > 0 || dur2 > 0)) {
+        previewText += ` (1차 ${dur1}분 + 2차 ${dur2}분)`;
+      }
+      totalEl.textContent = previewText;
+    }
+  },
+
   handleSaveAttendanceEdit() {
     const studentId = document.getElementById('editStudentId').value;
     const targetDate = document.getElementById('editDate')?.value || this.selectedDate;
-    const checkIn = document.getElementById('editCheckIn').value.trim() || null;
-    const checkOut = document.getElementById('editCheckOut').value.trim() || null;
+    const in1 = document.getElementById('editCheckIn')?.value?.trim() || null;
+    const out1 = document.getElementById('editCheckOut')?.value?.trim() || null;
+
+    const s2Container = document.getElementById('editSession2Container');
+    const isS2Visible = s2Container && s2Container.style.display !== 'none';
+    const in2 = isS2Visible ? (document.getElementById('editCheckIn2')?.value?.trim() || null) : null;
+    const out2 = isS2Visible ? (document.getElementById('editCheckOut2')?.value?.trim() || null) : null;
+
     const status = document.getElementById('editStatus').value;
     const memo = document.getElementById('editMemo').value.trim();
+
+    // 1차/2차 세션 배열 생성 (최대 2회)
+    const sessions = [];
+    if (in1 || out1) {
+      const dur1 = (in1 && out1) ? window.calculateDurationMinutes(in1, out1) : 0;
+      sessions.push({
+        in: in1,
+        out: out1,
+        duration: dur1
+      });
+    }
+
+    if (in2 || out2) {
+      const dur2 = (in2 && out2) ? window.calculateDurationMinutes(in2, out2) : 0;
+      sessions.push({
+        in: in2,
+        out: out2,
+        duration: dur2
+      });
+    }
+
+    const firstIn = sessions[0]?.in || in1 || in2 || null;
+    const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+    const lastOut = lastSession ? lastSession.out : null;
+    const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
 
     let att = window.store.attendances.find(a => a.studentId === studentId && a.date === targetDate);
     if (!att) {
@@ -445,27 +573,26 @@ const AttendanceManager = {
         id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
         studentId,
         date: targetDate,
-        checkIn,
-        checkOut,
+        checkIn: firstIn,
+        checkOut: lastOut,
+        sessions,
         status,
-        durationMinutes: 0,
+        durationMinutes: totalMinutes,
         memo
       };
-      if (checkIn && checkOut) {
-        att.durationMinutes = window.calculateDurationMinutes(checkIn, checkOut);
-      }
       window.store.attendances.push(att);
       window.store.saveAttendances();
     } else {
       window.store.updateAttendanceRecord(att.id, {
-        checkIn,
-        checkOut,
+        checkIn: firstIn,
+        checkOut: lastOut,
+        sessions,
         status,
         memo
       });
     }
 
-    window.showToast?.('💾 출결 정보가 저장되었습니다.');
+    window.showToast?.('💾 1차 및 2차 출결 정보가 완벽히 저장되었습니다.');
     this.closeEditModal();
     this.render();
     if (window.IndividualAttendanceManager) {

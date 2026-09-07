@@ -2125,7 +2125,7 @@ body {
 
   <!-- 2. 출석 시간/상태 수동 수정 모달 -->
   <div class="modal-overlay" id="attendanceEditModal">
-    <div class="modal-sheet">
+    <div class="modal-sheet" style="max-height: 90vh; overflow-y: auto;">
       <div class="sheet-handle"></div>
       <div class="modal-header">
         <div>
@@ -2141,15 +2141,62 @@ body {
         <input type="hidden" id="editStudentId">
         <input type="hidden" id="editDate">
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>등원(입실) 시간</label>
-            <input type="time" id="editCheckIn" class="form-control">
+        <!-- 1차 수업 시간 박스 -->
+        <div class="edit-session-box" style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+              <span class="badge" style="background: var(--primary-light); color: var(--primary); font-size: 0.72rem; padding: 2px 6px;">1차</span>
+              등원 및 하원 시간
+            </span>
+            <span id="editSession1Duration" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">-</span>
           </div>
-          <div class="form-group">
-            <label>하원(퇴실) 시간</label>
-            <input type="time" id="editCheckOut" class="form-control">
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-size: 0.78rem;">1차 등원(입실) 시간</label>
+              <input type="time" id="editCheckIn" class="form-control" oninput="AttendanceManager.calcEditDurationPreview()">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem;">1차 하원(퇴실) 시간</label>
+              <input type="time" id="editCheckOut" class="form-control" oninput="AttendanceManager.calcEditDurationPreview()">
+            </div>
           </div>
+        </div>
+
+        <!-- 2차 재입실/퇴실 시간 박스 (토글) -->
+        <div class="edit-session-box" id="editSession2Container" style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
+              <span class="badge" style="background: #e0f2fe; color: #0284c7; font-size: 0.72rem; padding: 2px 6px;">2차</span>
+              재입실 및 퇴실 시간
+            </span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span id="editSession2Duration" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">-</span>
+              <button type="button" id="btnRemoveSession2" class="btn btn-ghost btn-sm" style="color: var(--danger); font-size: 0.72rem; padding: 2px 6px; height: auto;" onclick="AttendanceManager.removeSession2InEdit()">
+                2차 삭제
+              </button>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-size: 0.78rem;">2차 재입실 시간</label>
+              <input type="time" id="editCheckIn2" class="form-control" oninput="AttendanceManager.calcEditDurationPreview()">
+            </div>
+            <div class="form-group">
+              <label style="font-size: 0.78rem;">2차 퇴실 시간</label>
+              <input type="time" id="editCheckOut2" class="form-control" oninput="AttendanceManager.calcEditDurationPreview()">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2차 추가 버튼 (2차 섹션 숨김 시 노출) -->
+        <button type="button" id="btnAddSession2" class="btn btn-outline btn-sm" style="border-style: dashed; justify-content: center; gap: 6px;" onclick="AttendanceManager.addSession2InEdit()">
+          <i data-lucide="plus"></i> 2차 재입실 시간 추가하기
+        </button>
+
+        <!-- 총 학습시간 요약 피드백 바 -->
+        <div id="editTotalDurationPreview" style="background: var(--primary-light); color: var(--primary); padding: 9px 12px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+          <span>⏱️ 총 학습시간 계산:</span>
+          <span id="editTotalDurationText" style="font-size: 0.88rem; color: var(--primary-hover);">0분</span>
         </div>
 
         <div class="form-group">
@@ -2569,6 +2616,9 @@ class DataStore {
             });
             modified = true;
           }
+        if (Array.isArray(att.sessions) && att.sessions.length > 2) {
+          att.sessions = att.sessions.slice(0, 2);
+          modified = true;
         }
         attendanceMap.set(key, att);
         cleanedAttendances.push(att);
@@ -2584,8 +2634,13 @@ class DataStore {
             duration: att.durationMinutes || 0
           });
         }
-        if (att.checkIn && !existing.checkIn) existing.checkIn = att.checkIn;
-        if (att.checkOut && !existing.checkOut) existing.checkOut = att.checkOut;
+        if (existing.sessions.length > 2) {
+          existing.sessions = existing.sessions.slice(0, 2);
+        }
+        if (existing.sessions.length > 0) {
+          existing.checkIn = existing.sessions[0].in;
+          existing.checkOut = existing.sessions[existing.sessions.length - 1].out;
+        }
         existing.durationMinutes = (existing.sessions || []).reduce((sum, s) => sum + (s.duration || 0), 0);
         modified = true;
       }
@@ -2765,7 +2820,7 @@ class DataStore {
     return this.attendances.find(a => a.studentId === studentId && a.date === dateStr);
   }
 
-  // 입실 (Check-in) - 다회차 입퇴실 완벽 지원
+  // 입실 (Check-in) - 최대 2회차(2차 재입실)까지 지원
   checkInStudent(studentId, customTime = null, dateStr = getTodayString()) {
     const time = customTime || getCurrentTimeString();
     let att = this.getTodayAttendanceForStudent(studentId, dateStr);
@@ -2783,31 +2838,43 @@ class DataStore {
         }
       }
 
-      // 2. 이미 하원 완료(checkOut이 존재) 상태인 경우 -> 새 세션 무조건 추가 및 재실 상태로 전환
+      // 2. 이미 하원 완료(checkOut이 존재) 상태인 경우
       if (att.checkOut) {
+        // 이미 2차 퇴실까지 완료된 경우 (최대 2회차 제한)
+        if (att.sessions.length >= 2) {
+          console.warn('CheckIn: Maximum 2 sessions reached for student', studentId);
+          return att;
+        }
+
+        // 이전 세션 닫기 확인
         att.sessions.forEach(s => {
           if (!s.out) {
             s.out = att.checkOut;
             s.duration = calculateDurationMinutes(s.in, s.out);
           }
         });
+
+        // 2차 재입실 세션 추가 (최대 2회차)
         att.sessions.push({
           in: time,
           out: null,
           duration: 0
         });
-        att.checkIn = time;
         att.checkOut = null; // 재실 중 상태로 전환!
       } else {
-        // 이미 재실 중(checkOut이 null)인 상태에서 입실 시간 재설정
+        // 이미 재실 중인 상태에서 입실 시간 재설정
         const openSession = att.sessions.find(s => !s.out);
         if (openSession) {
           openSession.in = time;
         } else {
-          att.sessions.push({ in: time, out: null, duration: 0 });
+          if (att.sessions.length < 2) {
+            att.sessions.push({ in: time, out: null, duration: 0 });
+          }
         }
-        att.checkIn = time;
       }
+
+      // 최초 등원시간 유지
+      att.checkIn = att.sessions[0]?.in || time;
       att.status = 'present';
     } else {
       att = {
@@ -2852,7 +2919,6 @@ class DataStore {
         openSession.out = time;
         openSession.duration = calculateDurationMinutes(openSession.in, time);
       } else if (att.sessions.length > 0) {
-        // 열린 세션이 없으면 마지막 세션 퇴실 시간 갱신
         const lastSession = att.sessions[att.sessions.length - 1];
         lastSession.out = time;
         lastSession.duration = calculateDurationMinutes(lastSession.in, time);
@@ -2860,6 +2926,12 @@ class DataStore {
         att.sessions.push({ in: att.checkIn || time, out: time, duration: 0 });
       }
 
+      // 최대 2회차 초과 세션 정리
+      if (att.sessions.length > 2) {
+        att.sessions = att.sessions.slice(0, 2);
+      }
+
+      att.checkIn = att.sessions[0]?.in || att.checkIn || time;
       att.checkOut = time;
       // 전체 세션 누적 시간 합산
       att.durationMinutes = att.sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
@@ -2892,45 +2964,58 @@ class DataStore {
     this.saveAttendances();
   }
 
-  // 출결 수동 변경 (시간, 상태, 메모 수정) - 세션 동기화 보장
+  // 출결 수동 변경 (시간, 상태, 메모 수정) - 1차/2차 세션 완벽 동기화 보장
   updateAttendanceRecord(id, updateData) {
     const index = this.attendances.findIndex(a => a.id === id);
     if (index !== -1) {
       const att = this.attendances[index];
-      const checkIn = updateData.checkIn !== undefined ? updateData.checkIn : att.checkIn;
-      const checkOut = updateData.checkOut !== undefined ? updateData.checkOut : att.checkOut;
       
-      let durationMinutes = 0;
-      if (checkIn && checkOut) {
-        durationMinutes = calculateDurationMinutes(checkIn, checkOut);
-      }
-
-      // 세션 배열 동기화
-      let sessions = Array.isArray(att.sessions) ? [...att.sessions] : [];
-      if (checkIn) {
-        if (sessions.length === 0) {
-          sessions = [{
-            in: checkIn,
-            out: checkOut || null,
-            duration: durationMinutes
-          }];
-        } else {
-          const lastIdx = sessions.length - 1;
-          sessions[lastIdx].in = checkIn;
-          sessions[lastIdx].out = checkOut || null;
-          sessions[lastIdx].duration = (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0;
-          // 전체 누적 계산
-          durationMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+      let sessions = [];
+      if (Array.isArray(updateData.sessions)) {
+        // sessions 배열이 직접 전달된 경우 (최대 2회차)
+        sessions = updateData.sessions.slice(0, 2).map(s => {
+          const inTime = s.in ? s.in.trim() : null;
+          const outTime = s.out ? s.out.trim() : null;
+          const dur = (inTime && outTime) ? calculateDurationMinutes(inTime, outTime) : 0;
+          return {
+            in: inTime,
+            out: outTime,
+            duration: dur
+          };
+        }).filter(s => s.in || s.out);
+      } else {
+        // 기존 checkIn / checkOut 단일 필드로 넘어온 경우
+        const checkIn = updateData.checkIn !== undefined ? updateData.checkIn : att.checkIn;
+        const checkOut = updateData.checkOut !== undefined ? updateData.checkOut : att.checkOut;
+        sessions = Array.isArray(att.sessions) ? [...att.sessions] : [];
+        if (checkIn) {
+          if (sessions.length === 0) {
+            sessions = [{
+              in: checkIn,
+              out: checkOut || null,
+              duration: (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0
+            }];
+          } else {
+            const lastIdx = sessions.length - 1;
+            sessions[lastIdx].in = checkIn;
+            sessions[lastIdx].out = checkOut || null;
+            sessions[lastIdx].duration = (checkIn && checkOut) ? calculateDurationMinutes(checkIn, checkOut) : 0;
+          }
         }
       }
+
+      const totalDuration = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+      const firstIn = sessions[0]?.in || updateData.checkIn || null;
+      const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+      const lastOut = lastSession ? lastSession.out : (updateData.checkOut || null);
 
       this.attendances[index] = {
         ...att,
         ...updateData,
-        checkIn,
-        checkOut,
+        checkIn: firstIn,
+        checkOut: lastOut,
         sessions,
-        durationMinutes
+        durationMinutes: totalDuration
       };
       this.saveAttendances();
       return this.attendances[index];
@@ -3491,8 +3576,11 @@ const NotificationManager = {
     const today = attendance ? attendance.date : window.getTodayString();
 
     if (type === 'checkIn') {
-      const time = attendance?.checkIn || window.getCurrentTimeString();
-      return `[공부방 등원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 ${time}에 공부방에 안전하게 도착하여 학습을 시작하였습니다.`;
+      const sNum = attendance?.sessions?.length || 1;
+      const sPrefix = sNum > 1 ? `${sNum}차 ` : '';
+      const openSession = attendance?.sessions?.find(s => !s.out);
+      const time = openSession?.in || attendance?.checkIn || window.getCurrentTimeString();
+      return `[공부방 ${sPrefix}등원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 ${time}에 공부방에 안전하게 도착하여 ${sPrefix}학습을 시작하였습니다.`;
     } else if (type === 'checkOut') {
       const checkInTime = attendance?.checkIn || '-';
       const checkOutTime = attendance?.checkOut || window.getCurrentTimeString();
@@ -3507,7 +3595,14 @@ const NotificationManager = {
         durationStr = '확인중';
       }
 
-      return `[공부방 하원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 학습을 마치고 ${checkOutTime}에 하원하였습니다.\n- 등원: ${checkInTime}\n- 하원: ${checkOutTime}\n- 총 학습시간: ${durationStr}\n오늘도 수고 많았습니다.`;
+      let sessionDetail = '';
+      if (attendance?.sessions && attendance.sessions.length > 1) {
+        sessionDetail = '\n' + attendance.sessions.map((s, idx) => 
+          `- ${idx+1}차: ${s.in || '-'}~${s.out || '-'} (${s.duration ? window.formatMinutesToKorean(s.duration) : '-'})`
+        ).join('\n');
+      }
+
+      return `[공부방 하원알림]\n안녕하세요, ${studentName} 학생 학부모님.\n${studentName} 학생이 오늘 학습을 마치고 ${checkOutTime}에 하원하였습니다.\n- 최초등원: ${checkInTime}\n- 최종하원: ${checkOutTime}${sessionDetail}\n- 오늘 총 학습시간: ${durationStr}\n오늘도 수고 많았습니다.`;
     } else if (type === 'status') {
       const statusText = attendance?.status === 'late' ? '지각' : 
                          attendance?.status === 'absent' ? '결석' : 
@@ -3827,7 +3922,7 @@ const AttendanceManager = {
         ).join(' ');
       }
 
-      // 액션 버튼 (미출석 -> 입실, 재실 -> 퇴실, 하원완료 -> 재입실 가능!)
+      // 액션 버튼 (미출석 -> 입실, 재실 -> 퇴실, 하원완료 -> 2차 재입실 가능, 2회 완료 시 마감!)
       let actionBtnHtml = '';
       if (isStudying) {
         const sNum = att.sessions?.length || 1;
@@ -3838,12 +3933,22 @@ const AttendanceManager = {
           </button>
         `;
       } else if (isFinished) {
-        const nextNum = (att.sessions?.length || 1) + 1;
-        actionBtnHtml = `
-          <button class="btn btn-primary btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')" style="background: #4f46e5;">
-            <i data-lucide="log-in"></i> ${nextNum}차 재입실
-          </button>
-        `;
+        const sessionCount = att.sessions?.length || 1;
+        if (sessionCount < 2) {
+          // 1차만 마친 경우 -> 2차 재입실 버튼 노출
+          actionBtnHtml = `
+            <button class="btn btn-primary btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')" style="background: #4f46e5;">
+              <i data-lucide="log-in"></i> 2차 재입실
+            </button>
+          `;
+        } else {
+          // 2차까지 완료된 경우 -> 3차 재입실 버튼 노출하지 않고 완료 표시 (최대 2회)
+          actionBtnHtml = `
+            <button class="btn btn-outline btn-sm" style="color: var(--success-hover); border-color: #86efac; background: #f0fdf4; cursor: default; font-weight: 600;">
+              <i data-lucide="check-check"></i> 오늘 수업 완료 (2회)
+            </button>
+          `;
+        }
       } else {
         actionBtnHtml = `
           <button class="btn btn-success btn-sm" onclick="AttendanceManager.quickCheckIn('${std.id}')">
@@ -3923,24 +4028,54 @@ const AttendanceManager = {
     if (window.lucide) window.lucide.createIcons();
   },
 
+  // 출결 수정 모달에 데이터 바인딩 (공통 헬퍼)
+  populateEditModal(student, att, dateStr) {
+    const modal = document.getElementById('attendanceEditModal');
+    if (!modal) return;
+
+    document.getElementById('editStudentId').value = student.id;
+    document.getElementById('editStudentName').textContent = `${student.name} (${student.level} ${student.grade || ''}) - ${dateStr}`;
+    document.getElementById('editDate').value = dateStr;
+
+    // 1차 세션 시간 설정
+    const s1 = att?.sessions?.[0];
+    const s1In = s1?.in || att?.checkIn || '';
+    const s1Out = s1?.out || (att?.sessions?.length === 1 ? att?.checkOut : '') || '';
+    document.getElementById('editCheckIn').value = s1In;
+    document.getElementById('editCheckOut').value = s1Out;
+
+    // 2차 세션 시간 설정
+    const s2 = att?.sessions?.[1];
+    const s2Container = document.getElementById('editSession2Container');
+    const btnAddS2 = document.getElementById('btnAddSession2');
+
+    if (s2 && (s2.in || s2.out)) {
+      document.getElementById('editCheckIn2').value = s2.in || '';
+      document.getElementById('editCheckOut2').value = s2.out || '';
+      if (s2Container) s2Container.style.display = 'block';
+      if (btnAddS2) btnAddS2.style.display = 'none';
+    } else {
+      document.getElementById('editCheckIn2').value = '';
+      document.getElementById('editCheckOut2').value = '';
+      if (s2Container) s2Container.style.display = 'none';
+      if (btnAddS2) btnAddS2.style.display = 'flex';
+    }
+
+    document.getElementById('editStatus').value = att?.status || 'present';
+    document.getElementById('editMemo').value = att?.memo || '';
+
+    this.calcEditDurationPreview();
+    modal.classList.add('active');
+    if (window.lucide) window.lucide.createIcons();
+  },
+
   // 특정 날짜의 출결 직접 수정 모달 열기 (개인출석부 등에서 호출)
   openDirectEditModal(studentId, dateStr) {
     const student = window.store.getStudentById(studentId);
     if (!student) return;
 
     const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
-    const modal = document.getElementById('attendanceEditModal');
-    if (!modal) return;
-
-    document.getElementById('editStudentId').value = student.id;
-    document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
-    document.getElementById('editDate').value = dateStr;
-    document.getElementById('editCheckIn').value = att?.checkIn || '';
-    document.getElementById('editCheckOut').value = att?.checkOut || '';
-    document.getElementById('editStatus').value = att?.status || 'present';
-    document.getElementById('editMemo').value = att?.memo || '';
-
-    modal.classList.add('active');
+    this.populateEditModal(student, att, dateStr);
   },
 
   // 원터치 입실
@@ -3976,18 +4111,7 @@ const AttendanceManager = {
     const att = window.store.getTodayAttendanceForStudent(studentId, this.selectedDate);
     if (!student) return;
 
-    const modal = document.getElementById('attendanceEditModal');
-    if (!modal) return;
-
-    document.getElementById('editStudentId').value = student.id;
-    document.getElementById('editStudentName').textContent = `${student.name} (${student.level} ${student.grade})`;
-    document.getElementById('editDate').value = this.selectedDate;
-    document.getElementById('editCheckIn').value = att?.checkIn || '';
-    document.getElementById('editCheckOut').value = att?.checkOut || '';
-    document.getElementById('editStatus').value = att?.status || 'present';
-    document.getElementById('editMemo').value = att?.memo || '';
-
-    modal.classList.add('active');
+    this.populateEditModal(student, att, this.selectedDate);
   },
 
   closeEditModal() {
@@ -3995,13 +4119,112 @@ const AttendanceManager = {
     if (modal) modal.classList.remove('active');
   },
 
+  // 모달 내 2차 세션 추가 버튼 클릭
+  addSession2InEdit() {
+    const s2Container = document.getElementById('editSession2Container');
+    const btnAddS2 = document.getElementById('btnAddSession2');
+    if (s2Container) s2Container.style.display = 'block';
+    if (btnAddS2) btnAddS2.style.display = 'none';
+
+    // 1차 하원 시간이 있으면 2차 기본값 추천 또는 포커스
+    const in2Input = document.getElementById('editCheckIn2');
+    if (in2Input && !in2Input.value) {
+      const out1 = document.getElementById('editCheckOut')?.value;
+      if (out1) in2Input.value = out1;
+      in2Input.focus();
+    }
+
+    this.calcEditDurationPreview();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 모달 내 2차 세션 삭제 버튼 클릭
+  removeSession2InEdit() {
+    const in2Input = document.getElementById('editCheckIn2');
+    const out2Input = document.getElementById('editCheckOut2');
+    if (in2Input) in2Input.value = '';
+    if (out2Input) out2Input.value = '';
+
+    const s2Container = document.getElementById('editSession2Container');
+    const btnAddS2 = document.getElementById('btnAddSession2');
+    if (s2Container) s2Container.style.display = 'none';
+    if (btnAddS2) btnAddS2.style.display = 'flex';
+
+    this.calcEditDurationPreview();
+    if (window.lucide) window.lucide.createIcons();
+  },
+
+  // 모달 내 실시간 시간 및 누적 학습시간 계산 미리보기
+  calcEditDurationPreview() {
+    const in1 = document.getElementById('editCheckIn')?.value?.trim() || '';
+    const out1 = document.getElementById('editCheckOut')?.value?.trim() || '';
+    const dur1 = (in1 && out1) ? window.calculateDurationMinutes(in1, out1) : 0;
+
+    const s1DurEl = document.getElementById('editSession1Duration');
+    if (s1DurEl) {
+      s1DurEl.textContent = (in1 && out1) ? window.formatMinutesToKorean(dur1) : (in1 ? '진행중' : '-');
+    }
+
+    const s2Container = document.getElementById('editSession2Container');
+    const isS2Visible = s2Container && s2Container.style.display !== 'none';
+    const in2 = isS2Visible ? (document.getElementById('editCheckIn2')?.value?.trim() || '') : '';
+    const out2 = isS2Visible ? (document.getElementById('editCheckOut2')?.value?.trim() || '') : '';
+    const dur2 = (in2 && out2) ? window.calculateDurationMinutes(in2, out2) : 0;
+
+    const s2DurEl = document.getElementById('editSession2Duration');
+    if (s2DurEl) {
+      s2DurEl.textContent = (in2 && out2) ? window.formatMinutesToKorean(dur2) : (in2 ? '진행중' : '-');
+    }
+
+    const totalDur = dur1 + dur2;
+    const totalEl = document.getElementById('editTotalDurationText');
+    if (totalEl) {
+      let previewText = window.formatMinutesToKorean(totalDur);
+      if (isS2Visible && (dur1 > 0 || dur2 > 0)) {
+        previewText += ` (1차 ${dur1}분 + 2차 ${dur2}분)`;
+      }
+      totalEl.textContent = previewText;
+    }
+  },
+
   handleSaveAttendanceEdit() {
     const studentId = document.getElementById('editStudentId').value;
     const targetDate = document.getElementById('editDate')?.value || this.selectedDate;
-    const checkIn = document.getElementById('editCheckIn').value.trim() || null;
-    const checkOut = document.getElementById('editCheckOut').value.trim() || null;
+    const in1 = document.getElementById('editCheckIn')?.value?.trim() || null;
+    const out1 = document.getElementById('editCheckOut')?.value?.trim() || null;
+
+    const s2Container = document.getElementById('editSession2Container');
+    const isS2Visible = s2Container && s2Container.style.display !== 'none';
+    const in2 = isS2Visible ? (document.getElementById('editCheckIn2')?.value?.trim() || null) : null;
+    const out2 = isS2Visible ? (document.getElementById('editCheckOut2')?.value?.trim() || null) : null;
+
     const status = document.getElementById('editStatus').value;
     const memo = document.getElementById('editMemo').value.trim();
+
+    // 1차/2차 세션 배열 생성 (최대 2회)
+    const sessions = [];
+    if (in1 || out1) {
+      const dur1 = (in1 && out1) ? window.calculateDurationMinutes(in1, out1) : 0;
+      sessions.push({
+        in: in1,
+        out: out1,
+        duration: dur1
+      });
+    }
+
+    if (in2 || out2) {
+      const dur2 = (in2 && out2) ? window.calculateDurationMinutes(in2, out2) : 0;
+      sessions.push({
+        in: in2,
+        out: out2,
+        duration: dur2
+      });
+    }
+
+    const firstIn = sessions[0]?.in || in1 || in2 || null;
+    const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+    const lastOut = lastSession ? lastSession.out : null;
+    const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
 
     let att = window.store.attendances.find(a => a.studentId === studentId && a.date === targetDate);
     if (!att) {
@@ -4009,27 +4232,26 @@ const AttendanceManager = {
         id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
         studentId,
         date: targetDate,
-        checkIn,
-        checkOut,
+        checkIn: firstIn,
+        checkOut: lastOut,
+        sessions,
         status,
-        durationMinutes: 0,
+        durationMinutes: totalMinutes,
         memo
       };
-      if (checkIn && checkOut) {
-        att.durationMinutes = window.calculateDurationMinutes(checkIn, checkOut);
-      }
       window.store.attendances.push(att);
       window.store.saveAttendances();
     } else {
       window.store.updateAttendanceRecord(att.id, {
-        checkIn,
-        checkOut,
+        checkIn: firstIn,
+        checkOut: lastOut,
+        sessions,
         status,
         memo
       });
     }
 
-    window.showToast?.('💾 출결 정보가 저장되었습니다.');
+    window.showToast?.('💾 1차 및 2차 출결 정보가 완벽히 저장되었습니다.');
     this.closeEditModal();
     this.render();
     if (window.IndividualAttendanceManager) {
@@ -4943,23 +5165,12 @@ const IndividualAttendanceManager = {
     if (window.AttendanceManager && window.AttendanceManager.openDirectEditModal) {
       window.AttendanceManager.openDirectEditModal(studentId, dateStr);
     } else {
-      // 대체 구현: attendanceEditModal 직접 띄우기
       const student = window.store.getStudentById(studentId);
       if (!student) return;
       const att = window.store.attendances.find(a => a.studentId === studentId && a.date === dateStr);
-
-      const modal = document.getElementById('attendanceEditModal');
-      if (!modal) return;
-
-      document.getElementById('editStudentId').value = student.id;
-      document.getElementById('editDate').value = dateStr;
-      document.getElementById('editStudentName').textContent = `${student.name} (${dateStr})`;
-      document.getElementById('editCheckIn').value = att ? (att.checkIn || '') : '14:00';
-      document.getElementById('editCheckOut').value = att ? (att.checkOut || '') : '16:00';
-      document.getElementById('editStatus').value = att ? (att.status || 'present') : 'present';
-      document.getElementById('editMemo').value = att ? (att.memo || '') : '';
-
-      modal.classList.add('active');
+      if (window.AttendanceManager && window.AttendanceManager.populateEditModal) {
+        window.AttendanceManager.populateEditModal(student, att, dateStr);
+      }
     }
   },
 
@@ -5081,6 +5292,7 @@ const KioskManager = {
   // 출석/퇴실 확인 팝업
   showCheckPrompt(student) {
     const today = window.getTodayString();
+    const att = window.store.getTodayAttendanceForStudent(student.id, today);
     const isStudying = att && att.checkIn && !att.checkOut && att.status !== 'absent';
     const isFinished = att && att.checkIn && att.checkOut && att.status !== 'absent';
 
@@ -5092,30 +5304,54 @@ const KioskManager = {
 
     const actionContainer = document.getElementById('kioskActionButtons');
     if (!isStudying) {
-      const nextSession = isFinished ? (att.sessions?.length || 1) + 1 : 1;
-      const btnText = isFinished ? `${nextSession}차 [다시 입실 (등원)] 하기` : '지금 [입실 (등원)] 하기';
-      const prevInfo = isFinished ? `
-        <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:0.82rem; color:var(--text-muted);">
-          ℹ️ 오늘 이전 수업: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> 학습 완료
-        </div>
-      ` : '';
-
-      actionContainer.innerHTML = `
-        ${prevInfo}
-        <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
-          <i data-lucide="log-in"></i> ${btnText}
-        </button>
-      `;
+      const sessionCount = att?.sessions?.length || (isFinished ? 1 : 0);
+      
+      // 이미 2회(2차 퇴실)까지 완료한 경우 -> 3차 입실 제한 및 완료 안내
+      if (isFinished && sessionCount >= 2) {
+        actionContainer.innerHTML = `
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; padding:14px; border-radius:12px; margin-bottom:12px; font-size:0.9rem; color:#065f46; text-align:center;">
+            🎉 <strong>오늘 2회 수업을 모두 마쳤습니다!</strong><br>
+            <span style="font-size:0.82rem; color:#047857; margin-top:4px; display:inline-block;">
+              총 학습시간: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> (수고 많았습니다)
+            </span>
+          </div>
+          <button class="btn btn-outline btn-lg btn-full" onclick="KioskManager.closeModal()">
+            <i data-lucide="check"></i> 확인
+          </button>
+        `;
+      } else if (isFinished && sessionCount === 1) {
+        // 1차 하원 완료 상태 -> 2차 다시 입실 버튼 노출
+        const prevInfo = `
+          <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; margin-bottom:8px; font-size:0.82rem; color:var(--text-muted);">
+            ℹ️ 1차 수업: <strong>${window.formatMinutesToKorean(att.durationMinutes)}</strong> 학습 완료
+          </div>
+        `;
+        actionContainer.innerHTML = `
+          ${prevInfo}
+          <button class="btn btn-primary btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')" style="background:#4f46e5;">
+            <i data-lucide="log-in"></i> 2차 [다시 입실 (등원)] 하기
+          </button>
+        `;
+      } else {
+        // 첫 입실
+        actionContainer.innerHTML = `
+          <button class="btn btn-success btn-lg btn-full" onclick="KioskManager.executeCheckIn('${student.id}')">
+            <i data-lucide="log-in"></i> 지금 [입실 (등원)] 하기
+          </button>
+        `;
+      }
     } else {
       const nowTime = window.getCurrentTimeString();
-      const mins = window.calculateDurationMinutes(att.checkIn, nowTime);
+      const openSession = att.sessions?.find(s => !s.out);
+      const curInTime = openSession?.in || att.checkIn || nowTime;
+      const mins = window.calculateDurationMinutes(curInTime, nowTime);
       const sNum = att.sessions?.length || 1;
       const sText = sNum > 1 ? `${sNum}차 ` : '';
       const totalAccum = (att.durationMinutes || 0) + mins;
 
       actionContainer.innerHTML = `
         <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.88rem;">
-          ${sText}등원시간: <strong>${att.checkIn}</strong><br>
+          ${sText}등원시간: <strong>${curInTime}</strong><br>
           현재 세션 학습: <strong style="color:var(--primary);">${window.formatMinutesToKorean(mins)}</strong>
           ${sNum > 1 ? `<br>오늘 총 누적 예상: <strong>${window.formatMinutesToKorean(totalAccum)}</strong>` : ''}
         </div>
@@ -5249,7 +5485,12 @@ const ExcelManager = {
           const currentM = window.calculateDurationMinutes(att.checkIn, window.getCurrentTimeString());
           durationStr = `${window.formatMinutesToKorean(currentM)} (진행중)`;
         }
-        memo = att.memo || '';
+        
+        let sessionNotes = '';
+        if (att.sessions && att.sessions.length > 1) {
+          sessionNotes = att.sessions.map((s, i) => `[${i+1}차] ${s.in || '-'}~${s.out || '-'}`).join(', ');
+        }
+        memo = [sessionNotes, att.memo].filter(Boolean).join(' | ');
       }
 
       rows.push([
@@ -5536,7 +5777,11 @@ const ExcelManager = {
           totalMinutes += att.durationMinutes;
           durationStr = window.formatMinutesToKorean(att.durationMinutes);
         }
-        memo = att.memo || '';
+        let sessionNotes = '';
+        if (att.sessions && att.sessions.length > 1) {
+          sessionNotes = att.sessions.map((s, i) => `[${i+1}차] ${s.in || '-'}~${s.out || '-'}`).join(', ');
+        }
+        memo = [sessionNotes, att.memo].filter(Boolean).join(' | ');
       }
 
       rows.push([
