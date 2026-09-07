@@ -3,14 +3,6 @@
  * 화면 전환, 실시간 시계, 통계 리포트 렌더링, 토스트 알림
  */
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    App.init();
-  });
-} else {
-  App.init();
-}
-
 const App = {
   currentTab: 'attendance',
 
@@ -448,3 +440,12 @@ window.showToast = (message) => {
 };
 
 window.App = App;
+
+// App 초기화 (DOM 준비 완료 시 또는 즉시)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+  });
+} else {
+  App.init();
+}
