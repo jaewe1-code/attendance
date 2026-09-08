@@ -160,21 +160,21 @@ const ExcelManager = {
   downloadStudentTemplate() {
     if (typeof XLSX === 'undefined') return;
     const templateRows = [
-      ['이름*', '구분(초등/중등/고등)*', '학년(예: 초5, 중2, 고1)', '학생연락처', '학부모연락처*', '주당목표시간(시간단위)', '특이사항메모'],
-      ['홍길동', '초등', '초5', '010-1111-2222', '010-3333-4444', 8, '월/수 17:00 등원'],
-      ['이순신', '중등', '중2', '010-5555-6666', '010-7777-8888', 12, '수학 집중반'],
-      ['강감찬', '고등', '고1', '010-9999-0000', '010-1234-5678', 18, '평일 19:30 등원']
+      ['이름*', '구분(초등/중등/고등)*', '학년(초1~초6, 중1~중3, 고1~고3)*', '학생연락처', '학부모연락처*', '주당목표시간(시간단위)', '특이사항메모'],
+      ['김민준', '초등', '초5', '010-1111-2222', '010-3333-4444', 8, '월/수 17:00 등원'],
+      ['이순신', '중등', '중2', '010-5555-6666', '010-7777-8888', 12, '화/목 18:00 수학 집중반'],
+      ['강감찬', '고등', '고1', '010-9999-0000', '010-1234-5678', 18, '평일 19:30 자습 및 질문']
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(templateRows);
     ws['!cols'] = [
       { wch: 12 },
       { wch: 22 },
+      { wch: 32 },
+      { wch: 16 },
+      { wch: 16 },
       { wch: 22 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 20 },
-      { wch: 25 }
+      { wch: 28 }
     ];
 
     const wb = XLSX.utils.book_new();
@@ -213,8 +213,13 @@ const ExcelManager = {
           const name = row[0] ? String(row[0]).trim() : '';
           if (!name) continue;
 
-          const level = row[1] ? String(row[1]).trim() : '초등';
-          const grade = row[2] ? String(row[2]).trim() : '';
+          let level = row[1] ? String(row[1]).trim() : '초등';
+          if (level.includes('중')) level = '중등';
+          else if (level.includes('고')) level = '고등';
+          else level = '초등';
+
+          const rawGrade = row[2] ? String(row[2]).trim() : '';
+          const grade = window.normalizeGrade ? window.normalizeGrade(level, rawGrade) : rawGrade;
           const phone = row[3] ? String(row[3]).trim() : '';
           const parentPhone = row[4] ? String(row[4]).trim() : '';
           const targetHours = Number(row[5]) || 10;

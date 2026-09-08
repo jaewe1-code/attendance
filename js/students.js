@@ -1,10 +1,11 @@
 /**
  * EduCheck - Student Management Module
- * 학생 목록 조회, 필터링, 신규 등록, 수정, 삭제 로직
+ * 학생 목록 조회, 초·중·고 학년별 세분화 필터링, 신규 등록, 수정, 삭제 로직
  */
 
 const StudentsManager = {
   currentFilter: 'all', // 'all', '초등', '중등', '고등'
+  currentGradeFilter: 'all', // 'all', '초1'~'초6', '중1'~'중3', '고1'~'고3'
   searchKeyword: '',
 
   init() {
@@ -20,6 +21,7 @@ const StudentsManager = {
         filterChips.forEach(c => c.classList.remove('active'));
         e.target.classList.add('active');
         this.currentFilter = e.target.dataset.filter;
+        this.currentGradeFilter = 'all'; // 학교급 변경 시 학년 필터 초기화
         this.render();
       });
     });
@@ -33,7 +35,15 @@ const StudentsManager = {
       });
     }
 
-    // 3. 학생 등록 폼 제출
+    // 3. 학생 등록 폼 학교급 변경 시 학년 드롭다운 동적 갱신
+    const modalLevel = document.getElementById('modalStudentLevel');
+    if (modalLevel) {
+      modalLevel.addEventListener('change', () => {
+        this.updateModalGradeOptions();
+      });
+    }
+
+    // 4. 학생 등록 폼 제출
     const studentForm = document.getElementById('studentForm');
     if (studentForm) {
       studentForm.addEventListener('submit', (e) => {
@@ -43,18 +53,112 @@ const StudentsManager = {
     }
   },
 
+  // 모달 내 학년 드롭다운 옵션 동적 업데이트
+  updateModalGradeOptions(selectedGrade = '') {
+    const levelSelect = document.getElementById('modalStudentLevel');
+    const gradeSelect = document.getElementById('modalStudentGrade');
+    if (!levelSelect || !gradeSelect) return;
+
+    const level = levelSelect.value || '초등';
+    const grades = window.getGradesForLevel ? window.getGradesForLevel(level) : ['초1', '초2', '초3', '초4', '초5', '초6'];
+    
+    const normSelected = window.normalizeGrade ? window.normalizeGrade(level, selectedGrade) : selectedGrade;
+
+    gradeSelect.innerHTML = grades.map(g => {
+      const isSelected = normSelected ? (g === normSelected) : false;
+      return `<option value="${g}" ${isSelected ? 'selected' : ''}>${g} (${level === '초등' ? '초등학교 ' : level === '중등' ? '중학교 ' : '고등학교 '}${g.replace(/[^0-9]/g, '')}학년)</option>`;
+    }).join('');
+
+    if (normSelected && !grades.includes(normSelected)) {
+      // 기타/직접 입력 값이 있는 경우 옵션 추가
+      const opt = document.createElement('option');
+      opt.value = normSelected;
+      opt.textContent = normSelected;
+      opt.selected = true;
+      gradeSelect.appendChild(opt);
+    }
+  },
+
+  // 학년 서브 필터 칩 렌더링
+  renderGradeFilterChips(allStudents) {
+    const container = document.getElementById('studentGradeChips');
+    if (!container) return;
+
+    let availableGrades = [];
+    if (this.currentFilter === '초등') {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6'];
+    } else if (this.currentFilter === '중등') {
+      availableGrades = ['중1', '중2', '중3'];
+    } else if (this.currentFilter === '고등') {
+      availableGrades = ['고1', '고2', '고3'];
+    } else {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+    }
+
+    // 각 학년별 인원수 계산
+    const gradeCounts = {};
+    availableGrades.forEach(g => { gradeCounts[g] = 0; });
+    allStudents.forEach(s => {
+      if (s.grade && gradeCounts[s.grade] !== undefined) {
+        gradeCounts[s.grade]++;
+      }
+    });
+
+    const levelPrefix = this.currentFilter === 'all' ? '전체 학년' : `${this.currentFilter} 전체`;
+    const totalCountInLevel = this.currentFilter === 'all' 
+      ? allStudents.length 
+      : allStudents.filter(s => s.level === this.currentFilter).length;
+
+    let html = `
+      <button class="chip ${this.currentGradeFilter === 'all' ? 'active' : ''}" data-grade="all">
+        ${levelPrefix} <span style="font-size:0.75rem; opacity:0.85;">(${totalCountInLevel})</span>
+      </button>
+    `;
+
+    availableGrades.forEach(g => {
+      const cnt = gradeCounts[g] || 0;
+      html += `
+        <button class="chip ${this.currentGradeFilter === g ? 'active' : ''}" data-grade="${g}">
+          ${g} <span style="font-size:0.75rem; opacity:0.85;">(${cnt})</span>
+        </button>
+      `;
+    });
+
+    container.innerHTML = html;
+
+    // 학년 칩 클릭 이벤트 바인딩
+    const chips = container.querySelectorAll('.chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        chips.forEach(c => c.classList.remove('active'));
+        const btn = e.currentTarget;
+        btn.classList.add('active');
+        this.currentGradeFilter = btn.dataset.grade;
+        this.render();
+      });
+    });
+  },
+
   render() {
     const container = document.getElementById('studentListContainer');
     if (!container) return;
 
-    let students = window.store.getStudents();
+    let allStudents = window.store.getStudents();
+    this.renderGradeFilterChips(allStudents);
+
+    let students = [...allStudents];
 
     // 1. 구분(초/중/고) 필터링
     if (this.currentFilter !== 'all') {
       students = students.filter(s => s.level === this.currentFilter);
     }
 
-    // 2. 검색어 필터링
+    // 2. 세부 학년 필터링 (초1~초6, 중1~중3, 고1~고3)
+    if (this.currentGradeFilter !== 'all') {
+      students = students.filter(s => s.grade === this.currentGradeFilter);
+    }
+
+    // 3. 검색어 필터링
     if (this.searchKeyword) {
       students = students.filter(s => 
         s.name.toLowerCase().includes(this.searchKeyword) ||
@@ -69,9 +173,10 @@ const StudentsManager = {
     if (countBadge) countBadge.textContent = `${students.length}명`;
 
     if (students.length === 0) {
+      const filterName = this.currentGradeFilter !== 'all' ? `[${this.currentGradeFilter}] ` : (this.currentFilter !== 'all' ? `[${this.currentFilter}부] ` : '');
       container.innerHTML = `
         <div class="card text-center" style="padding: 40px 20px;">
-          <p style="color: var(--text-muted); font-size: 0.95rem;">등록된 학생이 없거나 조건에 맞는 학생이 없습니다.</p>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">${filterName}해당 조건의 등록된 학생이 없습니다.</p>
           <button class="btn btn-primary btn-sm" style="margin: 14px auto 0 auto;" onclick="StudentsManager.openAddModal()">
             <i data-lucide="user-plus"></i> 학생 새로 등록
           </button>
@@ -86,11 +191,12 @@ const StudentsManager = {
       const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
       const initial = std.name ? std.name.slice(0, 1) : '?';
       
-        // 누적 학습 시간 계산
+      // 누적 학습 시간 계산
       const allAtts = window.store.attendances.filter(a => a.studentId === std.id);
       const totalMinutes = allAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
       const attendanceDays = allAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
       const schSummary = DataStore.formatScheduleText(std.schedules);
+      const gradeText = std.grade ? `${std.level} · ${std.grade}` : std.level;
 
       html += `
         <div class="student-card">
@@ -100,7 +206,7 @@ const StudentsManager = {
               <div class="student-meta">
                 <h3>
                   ${std.name}
-                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
+                  <span class="badge badge-school">${gradeText}</span>
                 </h3>
                 <div class="sub-info">
                   <span>📱 ${std.parentPhone ? '학부모: ' + std.parentPhone : (std.phone || '연락처 없음')}</span>
@@ -165,6 +271,8 @@ const StudentsManager = {
     form.reset();
     document.getElementById('modalStudentId').value = '';
     document.getElementById('studentModalTitle').textContent = '새 학생 등록';
+    document.getElementById('modalStudentLevel').value = '초등';
+    this.updateModalGradeOptions('초1');
     modal.classList.add('active');
   },
 
@@ -180,7 +288,7 @@ const StudentsManager = {
     document.getElementById('modalStudentId').value = student.id;
     document.getElementById('modalStudentName').value = student.name;
     document.getElementById('modalStudentLevel').value = student.level || '초등';
-    document.getElementById('modalStudentGrade').value = student.grade || '';
+    this.updateModalGradeOptions(student.grade || '');
     document.getElementById('modalStudentPhone').value = student.phone || '';
     document.getElementById('modalParentPhone').value = student.parentPhone || '';
     document.getElementById('modalTargetHours').value = student.weeklyTargetHours || 10;
@@ -223,10 +331,10 @@ const StudentsManager = {
 
     if (id) {
       window.store.updateStudent(id, data);
-      window.showToast?.(`✅ ${name} 학생 정보가 수정되었습니다.`);
+      window.showToast?.(`✅ ${name} (${data.grade || data.level}) 학생 정보가 수정되었습니다.`);
     } else {
       window.store.addStudent(data);
-      window.showToast?.(`🎉 ${name} 학생이 새로 등록되었습니다.`);
+      window.showToast?.(`🎉 ${name} (${data.grade || data.level}) 학생이 새로 등록되었습니다.`);
     }
 
     this.closeModal();
@@ -257,4 +365,5 @@ const StudentsManager = {
 };
 
 window.StudentsManager = StudentsManager;
+
 

@@ -260,6 +260,28 @@
   box-shadow: 0 2px 8px var(--primary-glow);
 }
 
+.subgrade-scroll-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 4px 0;
+  scrollbar-width: none;
+}
+.subgrade-scroll-wrap::-webkit-scrollbar {
+  display: none;
+}
+.subgrade-scroll-wrap .chip {
+  padding: 5px 11px;
+  font-size: 0.76rem;
+  background: #f8fafc;
+}
+.subgrade-scroll-wrap .chip.active {
+  background: #312e81;
+  border-color: #312e81;
+  color: #ffffff;
+}
+
 /* Search Bar */
 .search-input-wrap {
   position: relative;

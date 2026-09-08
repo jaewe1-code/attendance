@@ -105,7 +105,7 @@ const KioskManager = {
     if (!modal) return;
 
     document.getElementById('kioskStudentName').textContent = student.name;
-    document.getElementById('kioskStudentInfo').textContent = `${student.level} ${student.grade || ''}`;
+    document.getElementById('kioskStudentInfo').textContent = student.grade ? `${student.level} · ${student.grade}` : student.level;
 
     const actionContainer = document.getElementById('kioskActionButtons');
     if (!isStudying) {
@@ -183,7 +183,7 @@ const KioskManager = {
       listHtml += `
         <button class="btn btn-outline btn-full" style="padding:12px; justify-content:space-between;" onclick="KioskManager.showCheckPrompt(window.store.getStudentById('${s.id}'))">
           <strong>${s.name}</strong>
-          <span style="font-size:0.8rem; color:var(--text-muted);">${s.level} ${s.grade || ''}</span>
+          <span style="font-size:0.8rem; color:var(--text-muted);">${s.grade ? `${s.level} · ${s.grade}` : s.level}</span>
         </button>
       `;
     });

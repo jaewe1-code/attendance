@@ -126,8 +126,9 @@ const IndividualAttendanceManager = {
 
     studentSelect.innerHTML = filtered.map(s => {
       const schText = DataStore.formatScheduleText(s.schedules);
-      const subInfo = schText ? ` (${schText})` : ` [${s.level} ${s.grade || ''}]`;
-      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>${s.name}${subInfo}</option>`;
+      const gradeStr = s.grade || s.level;
+      const subInfo = schText ? ` (${schText})` : '';
+      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>[${gradeStr}] ${s.name}${subInfo}</option>`;
     }).join('');
 
     if (filtered.length > 0 && !filtered.some(s => s.id === this.selectedStudentId)) {
@@ -184,8 +185,9 @@ const IndividualAttendanceManager = {
 
     studentSelect.innerHTML = students.map(s => {
       const schText = DataStore.formatScheduleText(s.schedules);
-      const subInfo = schText ? ` (${schText})` : ` [${s.level} ${s.grade || ''}]`;
-      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>${s.name}${subInfo}</option>`;
+      const gradeStr = s.grade || s.level;
+      const subInfo = schText ? ` (${schText})` : '';
+      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>[${gradeStr}] ${s.name}${subInfo}</option>`;
     }).join('');
   },
 
@@ -221,7 +223,7 @@ const IndividualAttendanceManager = {
             <div class="student-meta">
               <h3>
                 ${student.name}
-                <span class="badge badge-school">${student.level} · ${student.grade || '전체'}</span>
+                <span class="badge badge-school">${student.grade ? `${student.level} · ${student.grade}` : student.level}</span>
               </h3>
               <div class="sub-info" style="display:flex; flex-direction:column; gap:2px; margin-top:3px;">
                 <span>📱 학생: ${student.phone || '미등록'} | 학부모: ${student.parentPhone || '미등록'}</span>

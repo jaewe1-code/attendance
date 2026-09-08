@@ -330,6 +330,44 @@ const App = {
       avgDailyTimeEl.textContent = window.formatMinutesToKorean(avg);
     }
 
+    // 학년별 통계 집계 및 렌더링
+    const gradeSummaryContainer = document.getElementById('reportGradeSummary');
+    if (gradeSummaryContainer) {
+      const allGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+      let gradeCardsHtml = '<div class="grade-stat-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px;">';
+
+      allGrades.forEach(g => {
+        const gradeStudents = students.filter(s => s.grade === g);
+        if (gradeStudents.length === 0) return; // 등록된 학생이 있는 학년만 카드 표시
+
+        const gradeStudentIds = new Set(gradeStudents.map(s => s.id));
+        const gradeAtts = allAtt.filter(a => gradeStudentIds.has(a.studentId));
+        const gradeMinutes = gradeAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+        const gradeAttCount = gradeAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
+        
+        const isElem = g.startsWith('초');
+        const isMiddle = g.startsWith('중');
+        const badgeBg = isElem ? '#fef3c7' : isMiddle ? '#e0f2fe' : '#f3e8ff';
+        const badgeColor = isElem ? '#b45309' : isMiddle ? '#0369a1' : '#6d28d9';
+
+        gradeCardsHtml += `
+          <div style="background:#ffffff; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:10px; box-shadow:var(--shadow-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="background:${badgeBg}; color:${badgeColor}; font-weight:800; font-size:0.75rem; padding:2px 6px; border-radius:4px;">${g}</span>
+              <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">${gradeStudents.length}명</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-main); margin-top:4px;">
+              <div>출석: <strong>${gradeAttCount}회</strong></div>
+              <div style="color:var(--primary); font-weight:700;">${window.formatMinutesToKorean(gradeMinutes)}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      gradeCardsHtml += '</div>';
+      gradeSummaryContainer.innerHTML = gradeCardsHtml;
+    }
+
     // 테이블 렌더링
     const tbody = document.getElementById('reportTableBody');
     if (!tbody) return;
@@ -345,11 +383,12 @@ const App = {
       const presentDays = studentAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
       const totalMinutes = studentAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
       const lateDays = studentAtts.filter(a => a.status === 'late').length;
+      const gradeBadgeText = std.grade ? `${std.level} · ${std.grade}` : std.level;
 
       rowsHtml += `
         <tr>
           <td><strong>${std.name}</strong></td>
-          <td><span class="badge badge-school">${std.level} ${std.grade || ''}</span></td>
+          <td><span class="badge badge-school">${gradeBadgeText}</span></td>
           <td>${presentDays}일</td>
           <td style="color:var(--primary); font-weight:700;">${window.formatMinutesToKorean(totalMinutes)}</td>
           <td>${lateDays > 0 ? `<span style="color:var(--warning); font-weight:600;">지각 ${lateDays}</span>` : '정상'}</td>

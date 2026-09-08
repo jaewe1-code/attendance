@@ -548,6 +548,28 @@ body {
   box-shadow: 0 2px 8px var(--primary-glow);
 }
 
+.subgrade-scroll-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 4px 0;
+  scrollbar-width: none;
+}
+.subgrade-scroll-wrap::-webkit-scrollbar {
+  display: none;
+}
+.subgrade-scroll-wrap .chip {
+  padding: 5px 11px;
+  font-size: 0.76rem;
+  background: #f8fafc;
+}
+.subgrade-scroll-wrap .chip.active {
+  background: #312e81;
+  border-color: #312e81;
+  color: #ffffff;
+}
+
 /* Search Bar */
 .search-input-wrap {
   position: relative;
@@ -1647,6 +1669,11 @@ body {
           </button>
         </div>
 
+        <!-- 세부 학년 필터 칩 (초1~초6, 중1~중3, 고1~고3) -->
+        <div class="subgrade-scroll-wrap" id="attendanceGradeChips">
+          <!-- JS Rendered Grade Chips -->
+        </div>
+
         <!-- 검색 및 상태 필터 -->
         <div class="search-input-wrap">
           <i data-lucide="search"></i>
@@ -1744,6 +1771,11 @@ body {
           <button class="chip" data-filter="고등">고등부</button>
         </div>
 
+        <!-- 세부 학년 필터 칩 (초1~초6, 중1~중3, 고1~고3) -->
+        <div class="subgrade-scroll-wrap" id="studentGradeChips">
+          <!-- JS Rendered Grade Chips -->
+        </div>
+
         <!-- 학생 목록 컨테이너 -->
         <div class="student-list" id="studentListContainer">
           <!-- JS Rendered Cards -->
@@ -1776,6 +1808,11 @@ body {
             <span style="font-size: 0.72rem; opacity: 0.9;">일평균 학습</span>
             <div id="reportAvgDailyHours" style="font-size: 1.35rem; font-weight: 800; margin-top: 2px;">0시간</div>
           </div>
+        </div>
+
+        <!-- 학년별 학생 수 및 출결 요약 -->
+        <div id="reportGradeSummary">
+          <!-- JS Rendered Grade Summary Cards -->
         </div>
 
         <!-- 엑셀 내보내기/가져오기 버튼 섹션 -->
@@ -2088,8 +2125,15 @@ body {
             </select>
           </div>
           <div class="form-group">
-            <label>학년</label>
-            <input type="text" id="modalStudentGrade" class="form-control" placeholder="예: 초5, 중2, 고1">
+            <label>학년 *</label>
+            <select id="modalStudentGrade" class="form-control">
+              <option value="초1">초1 (초등학교 1학년)</option>
+              <option value="초2">초2 (초등학교 2학년)</option>
+              <option value="초3">초3 (초등학교 3학년)</option>
+              <option value="초4">초4 (초등학교 4학년)</option>
+              <option value="초5">초5 (초등학교 5학년)</option>
+              <option value="초6">초6 (초등학교 6학년)</option>
+            </select>
           </div>
         </div>
 
@@ -2526,6 +2570,54 @@ function formatMinutesToKorean(minutes) {
   return `${h}시간 ${m}분`;
 }
 
+// 초·중·고 학년별 세분화 매핑 정의 (초1~초6, 중1~중3, 고1~고3)
+const GRADE_MAP = {
+  '초등': ['초1', '초2', '초3', '초4', '초5', '초6'],
+  '중등': ['중1', '중2', '중3'],
+  '고등': ['고1', '고2', '고3']
+};
+
+// 학교급별 학년 목록 반환
+function getGradesForLevel(level) {
+  return GRADE_MAP[level] || [];
+}
+
+// 학년 문자열 표준화 함수 (초1~초6, 중1~중3, 고1~고3)
+function normalizeGrade(level, gradeStr) {
+  if (!gradeStr) return '';
+  let str = String(gradeStr).trim();
+  if (!str) return '';
+
+  // 이미 '초1'~'초6', '중1'~'중3', '고1'~'고3' 형태인 경우
+  if (/^(초[1-6]|중[1-3]|고[1-3])$/.test(str)) {
+    return str;
+  }
+
+  // '초등 1학년', '중학교 2학년', '고3' 등 패턴 매칭
+  const numMatch = str.match(/([1-6])/);
+  if (numMatch) {
+    const num = numMatch[1];
+    if (str.includes('초') || level === '초등') {
+      if (num >= '1' && num <= '6') return `초${num}`;
+    } else if (str.includes('중') || level === '중등') {
+      if (num >= '1' && num <= '3') return `중${num}`;
+    } else if (str.includes('고') || level === '고등') {
+      if (num >= '1' && num <= '3') return `고${num}`;
+    } else {
+      // level 기본값 기준
+      if (level === '초등') return `초${num}`;
+      if (level === '중등') return `중${Math.min(Number(num), 3)}`;
+      if (level === '고등') return `고${Math.min(Number(num), 3)}`;
+    }
+  }
+
+  return str;
+}
+
+window.GRADE_MAP = GRADE_MAP;
+window.getGradesForLevel = getGradesForLevel;
+window.normalizeGrade = normalizeGrade;
+
 class DataStore {
   constructor() {
     this.students = [];
@@ -2579,6 +2671,14 @@ class DataStore {
         modified = true;
       }
       seenIds.add(s.id);
+      // 학년 표준화 (초1~초6, 중1~중3, 고1~고3)
+      if (s.grade) {
+        const normGrade = normalizeGrade(s.level, s.grade);
+        if (normGrade !== s.grade) {
+          s.grade = normGrade;
+          modified = true;
+        }
+      }
     });
 
     const validStudentIds = new Set(this.students.map(s => s.id));
@@ -2758,12 +2858,14 @@ class DataStore {
   addStudent(studentData) {
     const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
     const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');
+    const level = studentData.level || '초등';
+    const grade = normalizeGrade(level, studentData.grade || '');
     
     const newStudent = {
       id: 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
       name: studentData.name.trim(),
-      level: studentData.level || '초등',
-      grade: studentData.grade || '',
+      level: level,
+      grade: grade,
       phone: studentData.phone || '',
       parentPhone: studentData.parentPhone || '',
       phoneLast4: phoneLast4,
@@ -2782,10 +2884,15 @@ class DataStore {
     if (index !== -1) {
       const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
       const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');
+      const level = studentData.level !== undefined ? studentData.level : this.students[index].level;
+      const rawGrade = studentData.grade !== undefined ? studentData.grade : this.students[index].grade;
+      const grade = normalizeGrade(level, rawGrade);
 
       this.students[index] = {
         ...this.students[index],
         ...studentData,
+        level: level,
+        grade: grade,
         phoneLast4: phoneLast4,
         schedules: studentData.schedules !== undefined ? studentData.schedules : (this.students[index].schedules || [])
       };
@@ -3666,6 +3773,7 @@ window.NotificationManager = NotificationManager;
 const AttendanceManager = {
   selectedDate: window.getTodayString(),
   levelFilter: 'all', // 'all', '초등', '중등', '고등'
+  gradeFilter: 'all', // 'all', '초1'~'초6', '중1'~'중3', '고1'~'고3'
   statusFilter: 'all', // 'all', 'studying', 'finished', 'not_attended', 'absent'
   searchKeyword: '',
   timerInterval: null,
@@ -3695,6 +3803,7 @@ const AttendanceManager = {
         const btn = e.currentTarget;
         btn.classList.add('active');
         this.levelFilter = btn.dataset.level;
+        this.gradeFilter = 'all'; // 학교급 변경 시 세부 학년 필터 초기화
         this.render();
       });
     });
@@ -3754,6 +3863,7 @@ const AttendanceManager = {
 
   render() {
     this.renderDashboardStats();
+    this.renderGradeFilterChips();
     this.renderAttendanceList();
   },
 
@@ -3819,6 +3929,86 @@ const AttendanceManager = {
     if (countHighEl) countHighEl.textContent = `재실 ${levelStats['고등'].studying}/${levelStats['고등'].total}`;
   },
 
+  // 학년별 서브 필터 칩 및 재실/총원 현황 렌더링
+  renderGradeFilterChips() {
+    const container = document.getElementById('attendanceGradeChips');
+    if (!container) return;
+
+    const allStudents = window.store.getStudents();
+    const attendances = window.store.getAttendancesByDate(this.selectedDate);
+
+    let availableGrades = [];
+    if (this.levelFilter === '초등') {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6'];
+    } else if (this.levelFilter === '중등') {
+      availableGrades = ['중1', '중2', '중3'];
+    } else if (this.levelFilter === '고등') {
+      availableGrades = ['고1', '고2', '고3'];
+    } else {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+    }
+
+    // 각 학년별 (재실 인원 / 총원) 집계
+    const gradeStats = {};
+    availableGrades.forEach(g => {
+      gradeStats[g] = { total: 0, studying: 0 };
+    });
+
+    allStudents.forEach(s => {
+      if (s.grade && gradeStats[s.grade]) {
+        gradeStats[s.grade].total++;
+        const att = attendances.find(a => a.studentId === s.id);
+        if (att && att.checkIn && !att.checkOut && att.status !== 'absent') {
+          gradeStats[s.grade].studying++;
+        }
+      }
+    });
+
+    // 전체 재실/총원
+    let totalStudyingInLevel = 0;
+    let totalInLevel = 0;
+    allStudents.forEach(s => {
+      if (this.levelFilter === 'all' || s.level === this.levelFilter) {
+        totalInLevel++;
+        const att = attendances.find(a => a.studentId === s.id);
+        if (att && att.checkIn && !att.checkOut && att.status !== 'absent') {
+          totalStudyingInLevel++;
+        }
+      }
+    });
+
+    const levelPrefix = this.levelFilter === 'all' ? '전체 학년' : `${this.levelFilter} 전체`;
+
+    let html = `
+      <button class="chip ${this.gradeFilter === 'all' ? 'active' : ''}" data-grade="all">
+        ${levelPrefix} <span style="font-size:0.75rem; opacity:0.85;">(재실 ${totalStudyingInLevel}/${totalInLevel})</span>
+      </button>
+    `;
+
+    availableGrades.forEach(g => {
+      const stat = gradeStats[g] || { total: 0, studying: 0 };
+      html += `
+        <button class="chip ${this.gradeFilter === g ? 'active' : ''}" data-grade="${g}">
+          ${g} <span style="font-size:0.75rem; opacity:0.85;">(재실 ${stat.studying}/${stat.total})</span>
+        </button>
+      `;
+    });
+
+    container.innerHTML = html;
+
+    // 칩 클릭 이벤트 바인딩
+    const chips = container.querySelectorAll('.chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        chips.forEach(c => c.classList.remove('active'));
+        const btn = e.currentTarget;
+        btn.classList.add('active');
+        this.gradeFilter = btn.dataset.grade;
+        this.renderAttendanceList();
+      });
+    });
+  },
+
   // 학생별 출석 카드 리스트
   renderAttendanceList() {
     const container = document.getElementById('attendanceListContainer');
@@ -3832,7 +4022,12 @@ const AttendanceManager = {
       students = students.filter(s => s.level === this.levelFilter);
     }
 
-    // 2. 검색어 필터
+    // 2. 세부 학년 필터 (초1~초6, 중1~중3, 고1~고3)
+    if (this.gradeFilter !== 'all') {
+      students = students.filter(s => s.grade === this.gradeFilter);
+    }
+
+    // 3. 검색어 필터
     if (this.searchKeyword) {
       students = students.filter(s => 
         s.name.toLowerCase().includes(this.searchKeyword) ||
@@ -3841,7 +4036,7 @@ const AttendanceManager = {
       );
     }
 
-    // 3. 상태 필터 (공부중, 하원완료 등)
+    // 4. 상태 필터 (공부중, 하원완료 등)
     if (this.statusFilter !== 'all') {
       students = students.filter(std => {
         const att = attendances.find(a => a.studentId === std.id);
@@ -3859,10 +4054,10 @@ const AttendanceManager = {
     }
 
     if (students.length === 0) {
-      const levelName = this.levelFilter === 'all' ? '' : `[${this.levelFilter}부] `;
+      const filterName = this.gradeFilter !== 'all' ? `[${this.gradeFilter}] ` : (this.levelFilter !== 'all' ? `[${this.levelFilter}부] ` : '');
       container.innerHTML = `
         <div class="card text-center" style="padding: 35px 20px;">
-          <p style="color: var(--text-muted); font-size: 0.92rem;">${levelName}해당 조건의 학생/출석 데이터가 없습니다.</p>
+          <p style="color: var(--text-muted); font-size: 0.92rem;">${filterName}해당 조건의 학생/출석 데이터가 없습니다.</p>
         </div>
       `;
       return;
@@ -3966,7 +4161,7 @@ const AttendanceManager = {
               <div class="student-meta">
                 <h3>
                   ${std.name}
-                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
+                  <span class="badge badge-school">${std.grade ? `${std.level} · ${std.grade}` : std.level}</span>
                 </h3>
                 <div class="sub-info" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                   ${statusBadge}
@@ -4345,6 +4540,7 @@ window.AttendanceManager = AttendanceManager;
 
 const StudentsManager = {
   currentFilter: 'all', // 'all', '초등', '중등', '고등'
+  currentGradeFilter: 'all', // 'all', '초1'~'초6', '중1'~'중3', '고1'~'고3'
   searchKeyword: '',
 
   init() {
@@ -4360,6 +4556,7 @@ const StudentsManager = {
         filterChips.forEach(c => c.classList.remove('active'));
         e.target.classList.add('active');
         this.currentFilter = e.target.dataset.filter;
+        this.currentGradeFilter = 'all'; // 학교급 변경 시 학년 필터 초기화
         this.render();
       });
     });
@@ -4373,7 +4570,15 @@ const StudentsManager = {
       });
     }
 
-    // 3. 학생 등록 폼 제출
+    // 3. 학생 등록 폼 학교급 변경 시 학년 드롭다운 동적 갱신
+    const modalLevel = document.getElementById('modalStudentLevel');
+    if (modalLevel) {
+      modalLevel.addEventListener('change', () => {
+        this.updateModalGradeOptions();
+      });
+    }
+
+    // 4. 학생 등록 폼 제출
     const studentForm = document.getElementById('studentForm');
     if (studentForm) {
       studentForm.addEventListener('submit', (e) => {
@@ -4383,18 +4588,112 @@ const StudentsManager = {
     }
   },
 
+  // 모달 내 학년 드롭다운 옵션 동적 업데이트
+  updateModalGradeOptions(selectedGrade = '') {
+    const levelSelect = document.getElementById('modalStudentLevel');
+    const gradeSelect = document.getElementById('modalStudentGrade');
+    if (!levelSelect || !gradeSelect) return;
+
+    const level = levelSelect.value || '초등';
+    const grades = window.getGradesForLevel ? window.getGradesForLevel(level) : ['초1', '초2', '초3', '초4', '초5', '초6'];
+    
+    const normSelected = window.normalizeGrade ? window.normalizeGrade(level, selectedGrade) : selectedGrade;
+
+    gradeSelect.innerHTML = grades.map(g => {
+      const isSelected = normSelected ? (g === normSelected) : false;
+      return `<option value="${g}" ${isSelected ? 'selected' : ''}>${g} (${level === '초등' ? '초등학교 ' : level === '중등' ? '중학교 ' : '고등학교 '}${g.replace(/[^0-9]/g, '')}학년)</option>`;
+    }).join('');
+
+    if (normSelected && !grades.includes(normSelected)) {
+      // 기타/직접 입력 값이 있는 경우 옵션 추가
+      const opt = document.createElement('option');
+      opt.value = normSelected;
+      opt.textContent = normSelected;
+      opt.selected = true;
+      gradeSelect.appendChild(opt);
+    }
+  },
+
+  // 학년 서브 필터 칩 렌더링
+  renderGradeFilterChips(allStudents) {
+    const container = document.getElementById('studentGradeChips');
+    if (!container) return;
+
+    let availableGrades = [];
+    if (this.currentFilter === '초등') {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6'];
+    } else if (this.currentFilter === '중등') {
+      availableGrades = ['중1', '중2', '중3'];
+    } else if (this.currentFilter === '고등') {
+      availableGrades = ['고1', '고2', '고3'];
+    } else {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+    }
+
+    // 각 학년별 인원수 계산
+    const gradeCounts = {};
+    availableGrades.forEach(g => { gradeCounts[g] = 0; });
+    allStudents.forEach(s => {
+      if (s.grade && gradeCounts[s.grade] !== undefined) {
+        gradeCounts[s.grade]++;
+      }
+    });
+
+    const levelPrefix = this.currentFilter === 'all' ? '전체 학년' : `${this.currentFilter} 전체`;
+    const totalCountInLevel = this.currentFilter === 'all' 
+      ? allStudents.length 
+      : allStudents.filter(s => s.level === this.currentFilter).length;
+
+    let html = `
+      <button class="chip ${this.currentGradeFilter === 'all' ? 'active' : ''}" data-grade="all">
+        ${levelPrefix} <span style="font-size:0.75rem; opacity:0.85;">(${totalCountInLevel})</span>
+      </button>
+    `;
+
+    availableGrades.forEach(g => {
+      const cnt = gradeCounts[g] || 0;
+      html += `
+        <button class="chip ${this.currentGradeFilter === g ? 'active' : ''}" data-grade="${g}">
+          ${g} <span style="font-size:0.75rem; opacity:0.85;">(${cnt})</span>
+        </button>
+      `;
+    });
+
+    container.innerHTML = html;
+
+    // 학년 칩 클릭 이벤트 바인딩
+    const chips = container.querySelectorAll('.chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        chips.forEach(c => c.classList.remove('active'));
+        const btn = e.currentTarget;
+        btn.classList.add('active');
+        this.currentGradeFilter = btn.dataset.grade;
+        this.render();
+      });
+    });
+  },
+
   render() {
     const container = document.getElementById('studentListContainer');
     if (!container) return;
 
-    let students = window.store.getStudents();
+    let allStudents = window.store.getStudents();
+    this.renderGradeFilterChips(allStudents);
+
+    let students = [...allStudents];
 
     // 1. 구분(초/중/고) 필터링
     if (this.currentFilter !== 'all') {
       students = students.filter(s => s.level === this.currentFilter);
     }
 
-    // 2. 검색어 필터링
+    // 2. 세부 학년 필터링 (초1~초6, 중1~중3, 고1~고3)
+    if (this.currentGradeFilter !== 'all') {
+      students = students.filter(s => s.grade === this.currentGradeFilter);
+    }
+
+    // 3. 검색어 필터링
     if (this.searchKeyword) {
       students = students.filter(s => 
         s.name.toLowerCase().includes(this.searchKeyword) ||
@@ -4409,9 +4708,10 @@ const StudentsManager = {
     if (countBadge) countBadge.textContent = `${students.length}명`;
 
     if (students.length === 0) {
+      const filterName = this.currentGradeFilter !== 'all' ? `[${this.currentGradeFilter}] ` : (this.currentFilter !== 'all' ? `[${this.currentFilter}부] ` : '');
       container.innerHTML = `
         <div class="card text-center" style="padding: 40px 20px;">
-          <p style="color: var(--text-muted); font-size: 0.95rem;">등록된 학생이 없거나 조건에 맞는 학생이 없습니다.</p>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">${filterName}해당 조건의 등록된 학생이 없습니다.</p>
           <button class="btn btn-primary btn-sm" style="margin: 14px auto 0 auto;" onclick="StudentsManager.openAddModal()">
             <i data-lucide="user-plus"></i> 학생 새로 등록
           </button>
@@ -4426,11 +4726,12 @@ const StudentsManager = {
       const avatarClass = std.level === '초등' ? 'elem' : std.level === '중등' ? 'middle' : 'high';
       const initial = std.name ? std.name.slice(0, 1) : '?';
       
-        // 누적 학습 시간 계산
+      // 누적 학습 시간 계산
       const allAtts = window.store.attendances.filter(a => a.studentId === std.id);
       const totalMinutes = allAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
       const attendanceDays = allAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
       const schSummary = DataStore.formatScheduleText(std.schedules);
+      const gradeText = std.grade ? `${std.level} · ${std.grade}` : std.level;
 
       html += `
         <div class="student-card">
@@ -4440,7 +4741,7 @@ const StudentsManager = {
               <div class="student-meta">
                 <h3>
                   ${std.name}
-                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
+                  <span class="badge badge-school">${gradeText}</span>
                 </h3>
                 <div class="sub-info">
                   <span>📱 ${std.parentPhone ? '학부모: ' + std.parentPhone : (std.phone || '연락처 없음')}</span>
@@ -4505,6 +4806,8 @@ const StudentsManager = {
     form.reset();
     document.getElementById('modalStudentId').value = '';
     document.getElementById('studentModalTitle').textContent = '새 학생 등록';
+    document.getElementById('modalStudentLevel').value = '초등';
+    this.updateModalGradeOptions('초1');
     modal.classList.add('active');
   },
 
@@ -4520,7 +4823,7 @@ const StudentsManager = {
     document.getElementById('modalStudentId').value = student.id;
     document.getElementById('modalStudentName').value = student.name;
     document.getElementById('modalStudentLevel').value = student.level || '초등';
-    document.getElementById('modalStudentGrade').value = student.grade || '';
+    this.updateModalGradeOptions(student.grade || '');
     document.getElementById('modalStudentPhone').value = student.phone || '';
     document.getElementById('modalParentPhone').value = student.parentPhone || '';
     document.getElementById('modalTargetHours').value = student.weeklyTargetHours || 10;
@@ -4563,10 +4866,10 @@ const StudentsManager = {
 
     if (id) {
       window.store.updateStudent(id, data);
-      window.showToast?.(`✅ ${name} 학생 정보가 수정되었습니다.`);
+      window.showToast?.(`✅ ${name} (${data.grade || data.level}) 학생 정보가 수정되었습니다.`);
     } else {
       window.store.addStudent(data);
-      window.showToast?.(`🎉 ${name} 학생이 새로 등록되었습니다.`);
+      window.showToast?.(`🎉 ${name} (${data.grade || data.level}) 학생이 새로 등록되었습니다.`);
     }
 
     this.closeModal();
@@ -4730,8 +5033,9 @@ const IndividualAttendanceManager = {
 
     studentSelect.innerHTML = filtered.map(s => {
       const schText = DataStore.formatScheduleText(s.schedules);
-      const subInfo = schText ? ` (${schText})` : ` [${s.level} ${s.grade || ''}]`;
-      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>${s.name}${subInfo}</option>`;
+      const gradeStr = s.grade || s.level;
+      const subInfo = schText ? ` (${schText})` : '';
+      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>[${gradeStr}] ${s.name}${subInfo}</option>`;
     }).join('');
 
     if (filtered.length > 0 && !filtered.some(s => s.id === this.selectedStudentId)) {
@@ -4788,8 +5092,9 @@ const IndividualAttendanceManager = {
 
     studentSelect.innerHTML = students.map(s => {
       const schText = DataStore.formatScheduleText(s.schedules);
-      const subInfo = schText ? ` (${schText})` : ` [${s.level} ${s.grade || ''}]`;
-      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>${s.name}${subInfo}</option>`;
+      const gradeStr = s.grade || s.level;
+      const subInfo = schText ? ` (${schText})` : '';
+      return `<option value="${s.id}" ${s.id === this.selectedStudentId ? 'selected' : ''}>[${gradeStr}] ${s.name}${subInfo}</option>`;
     }).join('');
   },
 
@@ -4825,7 +5130,7 @@ const IndividualAttendanceManager = {
             <div class="student-meta">
               <h3>
                 ${student.name}
-                <span class="badge badge-school">${student.level} · ${student.grade || '전체'}</span>
+                <span class="badge badge-school">${student.grade ? `${student.level} · ${student.grade}` : student.level}</span>
               </h3>
               <div class="sub-info" style="display:flex; flex-direction:column; gap:2px; margin-top:3px;">
                 <span>📱 학생: ${student.phone || '미등록'} | 학부모: ${student.parentPhone || '미등록'}</span>
@@ -5301,7 +5606,7 @@ const KioskManager = {
     if (!modal) return;
 
     document.getElementById('kioskStudentName').textContent = student.name;
-    document.getElementById('kioskStudentInfo').textContent = `${student.level} ${student.grade || ''}`;
+    document.getElementById('kioskStudentInfo').textContent = student.grade ? `${student.level} · ${student.grade}` : student.level;
 
     const actionContainer = document.getElementById('kioskActionButtons');
     if (!isStudying) {
@@ -5379,7 +5684,7 @@ const KioskManager = {
       listHtml += `
         <button class="btn btn-outline btn-full" style="padding:12px; justify-content:space-between;" onclick="KioskManager.showCheckPrompt(window.store.getStudentById('${s.id}'))">
           <strong>${s.name}</strong>
-          <span style="font-size:0.8rem; color:var(--text-muted);">${s.level} ${s.grade || ''}</span>
+          <span style="font-size:0.8rem; color:var(--text-muted);">${s.grade ? `${s.level} · ${s.grade}` : s.level}</span>
         </button>
       `;
     });
@@ -5600,21 +5905,21 @@ const ExcelManager = {
   downloadStudentTemplate() {
     if (typeof XLSX === 'undefined') return;
     const templateRows = [
-      ['이름*', '구분(초등/중등/고등)*', '학년(예: 초5, 중2, 고1)', '학생연락처', '학부모연락처*', '주당목표시간(시간단위)', '특이사항메모'],
-      ['홍길동', '초등', '초5', '010-1111-2222', '010-3333-4444', 8, '월/수 17:00 등원'],
-      ['이순신', '중등', '중2', '010-5555-6666', '010-7777-8888', 12, '수학 집중반'],
-      ['강감찬', '고등', '고1', '010-9999-0000', '010-1234-5678', 18, '평일 19:30 등원']
+      ['이름*', '구분(초등/중등/고등)*', '학년(초1~초6, 중1~중3, 고1~고3)*', '학생연락처', '학부모연락처*', '주당목표시간(시간단위)', '특이사항메모'],
+      ['김민준', '초등', '초5', '010-1111-2222', '010-3333-4444', 8, '월/수 17:00 등원'],
+      ['이순신', '중등', '중2', '010-5555-6666', '010-7777-8888', 12, '화/목 18:00 수학 집중반'],
+      ['강감찬', '고등', '고1', '010-9999-0000', '010-1234-5678', 18, '평일 19:30 자습 및 질문']
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(templateRows);
     ws['!cols'] = [
       { wch: 12 },
       { wch: 22 },
+      { wch: 32 },
+      { wch: 16 },
+      { wch: 16 },
       { wch: 22 },
-      { wch: 16 },
-      { wch: 16 },
-      { wch: 20 },
-      { wch: 25 }
+      { wch: 28 }
     ];
 
     const wb = XLSX.utils.book_new();
@@ -5653,8 +5958,13 @@ const ExcelManager = {
           const name = row[0] ? String(row[0]).trim() : '';
           if (!name) continue;
 
-          const level = row[1] ? String(row[1]).trim() : '초등';
-          const grade = row[2] ? String(row[2]).trim() : '';
+          let level = row[1] ? String(row[1]).trim() : '초등';
+          if (level.includes('중')) level = '중등';
+          else if (level.includes('고')) level = '고등';
+          else level = '초등';
+
+          const rawGrade = row[2] ? String(row[2]).trim() : '';
+          const grade = window.normalizeGrade ? window.normalizeGrade(level, rawGrade) : rawGrade;
           const phone = row[3] ? String(row[3]).trim() : '';
           const parentPhone = row[4] ? String(row[4]).trim() : '';
           const targetHours = Number(row[5]) || 10;
@@ -6160,6 +6470,44 @@ const App = {
       avgDailyTimeEl.textContent = window.formatMinutesToKorean(avg);
     }
 
+    // 학년별 통계 집계 및 렌더링
+    const gradeSummaryContainer = document.getElementById('reportGradeSummary');
+    if (gradeSummaryContainer) {
+      const allGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+      let gradeCardsHtml = '<div class="grade-stat-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px;">';
+
+      allGrades.forEach(g => {
+        const gradeStudents = students.filter(s => s.grade === g);
+        if (gradeStudents.length === 0) return; // 등록된 학생이 있는 학년만 카드 표시
+
+        const gradeStudentIds = new Set(gradeStudents.map(s => s.id));
+        const gradeAtts = allAtt.filter(a => gradeStudentIds.has(a.studentId));
+        const gradeMinutes = gradeAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+        const gradeAttCount = gradeAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
+        
+        const isElem = g.startsWith('초');
+        const isMiddle = g.startsWith('중');
+        const badgeBg = isElem ? '#fef3c7' : isMiddle ? '#e0f2fe' : '#f3e8ff';
+        const badgeColor = isElem ? '#b45309' : isMiddle ? '#0369a1' : '#6d28d9';
+
+        gradeCardsHtml += `
+          <div style="background:#ffffff; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:10px; box-shadow:var(--shadow-sm);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="background:${badgeBg}; color:${badgeColor}; font-weight:800; font-size:0.75rem; padding:2px 6px; border-radius:4px;">${g}</span>
+              <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">${gradeStudents.length}명</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-main); margin-top:4px;">
+              <div>출석: <strong>${gradeAttCount}회</strong></div>
+              <div style="color:var(--primary); font-weight:700;">${window.formatMinutesToKorean(gradeMinutes)}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      gradeCardsHtml += '</div>';
+      gradeSummaryContainer.innerHTML = gradeCardsHtml;
+    }
+
     // 테이블 렌더링
     const tbody = document.getElementById('reportTableBody');
     if (!tbody) return;
@@ -6175,11 +6523,12 @@ const App = {
       const presentDays = studentAtts.filter(a => a.status === 'present' || a.status === 'supplement').length;
       const totalMinutes = studentAtts.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
       const lateDays = studentAtts.filter(a => a.status === 'late').length;
+      const gradeBadgeText = std.grade ? `${std.level} · ${std.grade}` : std.level;
 
       rowsHtml += `
         <tr>
           <td><strong>${std.name}</strong></td>
-          <td><span class="badge badge-school">${std.level} ${std.grade || ''}</span></td>
+          <td><span class="badge badge-school">${gradeBadgeText}</span></td>
           <td>${presentDays}일</td>
           <td style="color:var(--primary); font-weight:700;">${window.formatMinutesToKorean(totalMinutes)}</td>
           <td>${lateDays > 0 ? `<span style="color:var(--warning); font-weight:600;">지각 ${lateDays}</span>` : '정상'}</td>

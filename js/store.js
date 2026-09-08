@@ -55,6 +55,54 @@ function formatMinutesToKorean(minutes) {
   return `${h}시간 ${m}분`;
 }
 
+// 초·중·고 학년별 세분화 매핑 정의 (초1~초6, 중1~중3, 고1~고3)
+const GRADE_MAP = {
+  '초등': ['초1', '초2', '초3', '초4', '초5', '초6'],
+  '중등': ['중1', '중2', '중3'],
+  '고등': ['고1', '고2', '고3']
+};
+
+// 학교급별 학년 목록 반환
+function getGradesForLevel(level) {
+  return GRADE_MAP[level] || [];
+}
+
+// 학년 문자열 표준화 함수 (초1~초6, 중1~중3, 고1~고3)
+function normalizeGrade(level, gradeStr) {
+  if (!gradeStr) return '';
+  let str = String(gradeStr).trim();
+  if (!str) return '';
+
+  // 이미 '초1'~'초6', '중1'~'중3', '고1'~'고3' 형태인 경우
+  if (/^(초[1-6]|중[1-3]|고[1-3])$/.test(str)) {
+    return str;
+  }
+
+  // '초등 1학년', '중학교 2학년', '고3' 등 패턴 매칭
+  const numMatch = str.match(/([1-6])/);
+  if (numMatch) {
+    const num = numMatch[1];
+    if (str.includes('초') || level === '초등') {
+      if (num >= '1' && num <= '6') return `초${num}`;
+    } else if (str.includes('중') || level === '중등') {
+      if (num >= '1' && num <= '3') return `중${num}`;
+    } else if (str.includes('고') || level === '고등') {
+      if (num >= '1' && num <= '3') return `고${num}`;
+    } else {
+      // level 기본값 기준
+      if (level === '초등') return `초${num}`;
+      if (level === '중등') return `중${Math.min(Number(num), 3)}`;
+      if (level === '고등') return `고${Math.min(Number(num), 3)}`;
+    }
+  }
+
+  return str;
+}
+
+window.GRADE_MAP = GRADE_MAP;
+window.getGradesForLevel = getGradesForLevel;
+window.normalizeGrade = normalizeGrade;
+
 class DataStore {
   constructor() {
     this.students = [];
@@ -108,6 +156,14 @@ class DataStore {
         modified = true;
       }
       seenIds.add(s.id);
+      // 학년 표준화 (초1~초6, 중1~중3, 고1~고3)
+      if (s.grade) {
+        const normGrade = normalizeGrade(s.level, s.grade);
+        if (normGrade !== s.grade) {
+          s.grade = normGrade;
+          modified = true;
+        }
+      }
     });
 
     const validStudentIds = new Set(this.students.map(s => s.id));
@@ -293,12 +349,14 @@ class DataStore {
   addStudent(studentData) {
     const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
     const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');
+    const level = studentData.level || '초등';
+    const grade = normalizeGrade(level, studentData.grade || '');
     
     const newStudent = {
       id: 'std-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
       name: studentData.name.trim(),
-      level: studentData.level || '초등',
-      grade: studentData.grade || '',
+      level: level,
+      grade: grade,
       phone: studentData.phone || '',
       parentPhone: studentData.parentPhone || '',
       phoneLast4: phoneLast4,
@@ -317,10 +375,15 @@ class DataStore {
     if (index !== -1) {
       const phoneRaw = (studentData.phone || '').replace(/[^0-9]/g, '');
       const phoneLast4 = studentData.phoneLast4 || (phoneRaw.length >= 4 ? phoneRaw.slice(-4) : '');
+      const level = studentData.level !== undefined ? studentData.level : this.students[index].level;
+      const rawGrade = studentData.grade !== undefined ? studentData.grade : this.students[index].grade;
+      const grade = normalizeGrade(level, rawGrade);
 
       this.students[index] = {
         ...this.students[index],
         ...studentData,
+        level: level,
+        grade: grade,
         phoneLast4: phoneLast4,
         schedules: studentData.schedules !== undefined ? studentData.schedules : (this.students[index].schedules || [])
       };

@@ -6,6 +6,7 @@
 const AttendanceManager = {
   selectedDate: window.getTodayString(),
   levelFilter: 'all', // 'all', '초등', '중등', '고등'
+  gradeFilter: 'all', // 'all', '초1'~'초6', '중1'~'중3', '고1'~'고3'
   statusFilter: 'all', // 'all', 'studying', 'finished', 'not_attended', 'absent'
   searchKeyword: '',
   timerInterval: null,
@@ -35,6 +36,7 @@ const AttendanceManager = {
         const btn = e.currentTarget;
         btn.classList.add('active');
         this.levelFilter = btn.dataset.level;
+        this.gradeFilter = 'all'; // 학교급 변경 시 세부 학년 필터 초기화
         this.render();
       });
     });
@@ -94,69 +96,88 @@ const AttendanceManager = {
 
   render() {
     this.renderDashboardStats();
+    this.renderGradeFilterChips();
     this.renderAttendanceList();
   },
 
-  // 상단 대시보드 통계 카드 및 학교급별 탭 뱃지 갱신
-  renderDashboardStats() {
-    const students = window.store.getStudents();
+  // 학년별 서브 필터 칩 및 재실/총원 현황 렌더링
+  renderGradeFilterChips() {
+    const container = document.getElementById('attendanceGradeChips');
+    if (!container) return;
+
+    const allStudents = window.store.getStudents();
     const attendances = window.store.getAttendancesByDate(this.selectedDate);
 
-    const totalStudents = students.length;
-    let studyingCount = 0;
-    let finishedCount = 0;
-    let absentCount = 0;
+    let availableGrades = [];
+    if (this.levelFilter === '초등') {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6'];
+    } else if (this.levelFilter === '중등') {
+      availableGrades = ['중1', '중2', '중3'];
+    } else if (this.levelFilter === '고등') {
+      availableGrades = ['고1', '고2', '고3'];
+    } else {
+      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+    }
 
-    // 학교급별 인원 및 재실 카운트
-    const levelStats = {
-      초등: { total: 0, studying: 0 },
-      중등: { total: 0, studying: 0 },
-      고등: { total: 0, studying: 0 }
-    };
-
-    students.forEach(s => {
-      if (levelStats[s.level]) {
-        levelStats[s.level].total++;
-      }
+    // 각 학년별 (재실 인원 / 총원) 집계
+    const gradeStats = {};
+    availableGrades.forEach(g => {
+      gradeStats[g] = { total: 0, studying: 0 };
     });
 
-    attendances.forEach(att => {
-      const std = students.find(s => s.id === att.studentId);
-      const isStudying = att.checkIn && !att.checkOut && att.status !== 'absent';
-
-      if (isStudying) {
-        studyingCount++;
-        if (std && levelStats[std.level]) {
-          levelStats[std.level].studying++;
+    allStudents.forEach(s => {
+      if (s.grade && gradeStats[s.grade]) {
+        gradeStats[s.grade].total++;
+        const att = attendances.find(a => a.studentId === s.id);
+        if (att && att.checkIn && !att.checkOut && att.status !== 'absent') {
+          gradeStats[s.grade].studying++;
         }
-      } else if (att.checkIn && att.checkOut) {
-        finishedCount++;
-      } else if (att.status === 'absent') {
-        absentCount++;
       }
     });
 
-    const notAttendedCount = Math.max(0, totalStudents - studyingCount - finishedCount - absentCount);
+    // 전체 재실/총원
+    let totalStudyingInLevel = 0;
+    let totalInLevel = 0;
+    allStudents.forEach(s => {
+      if (this.levelFilter === 'all' || s.level === this.levelFilter) {
+        totalInLevel++;
+        const att = attendances.find(a => a.studentId === s.id);
+        if (att && att.checkIn && !att.checkOut && att.status !== 'absent') {
+          totalStudyingInLevel++;
+        }
+      }
+    });
 
-    // 대시보드 히어로 숫자 업데이트
-    const totalEl = document.getElementById('statTotalStudents');
-    const studyingEl = document.getElementById('statStudying');
-    const finishedEl = document.getElementById('statFinished');
+    const levelPrefix = this.levelFilter === 'all' ? '전체 학년' : `${this.levelFilter} 전체`;
 
-    if (totalEl) totalEl.textContent = `${totalStudents}명`;
-    if (studyingEl) studyingEl.textContent = `${studyingCount}명`;
-    if (finishedEl) finishedEl.textContent = `${finishedCount}명`;
+    let html = `
+      <button class="chip ${this.gradeFilter === 'all' ? 'active' : ''}" data-grade="all">
+        ${levelPrefix} <span style="font-size:0.75rem; opacity:0.85;">(재실 ${totalStudyingInLevel}/${totalInLevel})</span>
+      </button>
+    `;
 
-    // 학교급 세그먼트 탭 뱃지 업데이트
-    const countAllEl = document.getElementById('levelCountAll');
-    const countElemEl = document.getElementById('levelCountElem');
-    const countMiddleEl = document.getElementById('levelCountMiddle');
-    const countHighEl = document.getElementById('levelCountHigh');
+    availableGrades.forEach(g => {
+      const stat = gradeStats[g] || { total: 0, studying: 0 };
+      html += `
+        <button class="chip ${this.gradeFilter === g ? 'active' : ''}" data-grade="${g}">
+          ${g} <span style="font-size:0.75rem; opacity:0.85;">(재실 ${stat.studying}/${stat.total})</span>
+        </button>
+      `;
+    });
 
-    if (countAllEl) countAllEl.textContent = `재실 ${studyingCount}/${totalStudents}`;
-    if (countElemEl) countElemEl.textContent = `재실 ${levelStats['초등'].studying}/${levelStats['초등'].total}`;
-    if (countMiddleEl) countMiddleEl.textContent = `재실 ${levelStats['중등'].studying}/${levelStats['중등'].total}`;
-    if (countHighEl) countHighEl.textContent = `재실 ${levelStats['고등'].studying}/${levelStats['고등'].total}`;
+    container.innerHTML = html;
+
+    // 칩 클릭 이벤트 바인딩
+    const chips = container.querySelectorAll('.chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        chips.forEach(c => c.classList.remove('active'));
+        const btn = e.currentTarget;
+        btn.classList.add('active');
+        this.gradeFilter = btn.dataset.grade;
+        this.renderAttendanceList();
+      });
+    });
   },
 
   // 학생별 출석 카드 리스트
@@ -172,7 +193,12 @@ const AttendanceManager = {
       students = students.filter(s => s.level === this.levelFilter);
     }
 
-    // 2. 검색어 필터
+    // 2. 세부 학년 필터 (초1~초6, 중1~중3, 고1~고3)
+    if (this.gradeFilter !== 'all') {
+      students = students.filter(s => s.grade === this.gradeFilter);
+    }
+
+    // 3. 검색어 필터
     if (this.searchKeyword) {
       students = students.filter(s => 
         s.name.toLowerCase().includes(this.searchKeyword) ||
@@ -181,7 +207,7 @@ const AttendanceManager = {
       );
     }
 
-    // 3. 상태 필터 (공부중, 하원완료 등)
+    // 4. 상태 필터 (공부중, 하원완료 등)
     if (this.statusFilter !== 'all') {
       students = students.filter(std => {
         const att = attendances.find(a => a.studentId === std.id);
@@ -199,10 +225,10 @@ const AttendanceManager = {
     }
 
     if (students.length === 0) {
-      const levelName = this.levelFilter === 'all' ? '' : `[${this.levelFilter}부] `;
+      const filterName = this.gradeFilter !== 'all' ? `[${this.gradeFilter}] ` : (this.levelFilter !== 'all' ? `[${this.levelFilter}부] ` : '');
       container.innerHTML = `
         <div class="card text-center" style="padding: 35px 20px;">
-          <p style="color: var(--text-muted); font-size: 0.92rem;">${levelName}해당 조건의 학생/출석 데이터가 없습니다.</p>
+          <p style="color: var(--text-muted); font-size: 0.92rem;">${filterName}해당 조건의 학생/출석 데이터가 없습니다.</p>
         </div>
       `;
       return;
@@ -306,7 +332,7 @@ const AttendanceManager = {
               <div class="student-meta">
                 <h3>
                   ${std.name}
-                  <span class="badge badge-school">${std.level} · ${std.grade || '전체'}</span>
+                  <span class="badge badge-school">${std.grade ? `${std.level} · ${std.grade}` : std.level}</span>
                 </h3>
                 <div class="sub-info" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                   ${statusBadge}
