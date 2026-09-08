@@ -333,7 +333,7 @@ const App = {
     // 학년별 통계 집계 및 렌더링
     const gradeSummaryContainer = document.getElementById('reportGradeSummary');
     if (gradeSummaryContainer) {
-      const allGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+      const allGrades = ['초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
       let gradeCardsHtml = '<div class="grade-stat-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px;">';
 
       allGrades.forEach(g => {

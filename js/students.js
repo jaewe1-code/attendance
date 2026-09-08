@@ -5,7 +5,7 @@
 
 const StudentsManager = {
   currentFilter: 'all', // 'all', '초등', '중등', '고등'
-  currentGradeFilter: 'all', // 'all', '초1'~'초6', '중1'~'중3', '고1'~'고3'
+  currentGradeFilter: 'all', // 'all', '초5'~'초6', '중1'~'중3', '고1'~'고3'
   searchKeyword: '',
 
   init() {
@@ -60,7 +60,7 @@ const StudentsManager = {
     if (!levelSelect || !gradeSelect) return;
 
     const level = levelSelect.value || '초등';
-    const grades = window.getGradesForLevel ? window.getGradesForLevel(level) : ['초1', '초2', '초3', '초4', '초5', '초6'];
+    const grades = window.getGradesForLevel ? window.getGradesForLevel(level) : (level === '초등' ? ['초5', '초6'] : level === '중등' ? ['중1', '중2', '중3'] : ['고1', '고2', '고3']);
     
     const normSelected = window.normalizeGrade ? window.normalizeGrade(level, selectedGrade) : selectedGrade;
 
@@ -86,13 +86,13 @@ const StudentsManager = {
 
     let availableGrades = [];
     if (this.currentFilter === '초등') {
-      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6'];
+      availableGrades = ['초5', '초6'];
     } else if (this.currentFilter === '중등') {
       availableGrades = ['중1', '중2', '중3'];
     } else if (this.currentFilter === '고등') {
       availableGrades = ['고1', '고2', '고3'];
     } else {
-      availableGrades = ['초1', '초2', '초3', '초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+      availableGrades = ['초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
     }
 
     // 각 학년별 인원수 계산
@@ -153,7 +153,7 @@ const StudentsManager = {
       students = students.filter(s => s.level === this.currentFilter);
     }
 
-    // 2. 세부 학년 필터링 (초1~초6, 중1~중3, 고1~고3)
+    // 2. 세부 학년 필터링 (초5~초6, 중1~중3, 고1~고3)
     if (this.currentGradeFilter !== 'all') {
       students = students.filter(s => s.grade === this.currentGradeFilter);
     }
@@ -272,7 +272,7 @@ const StudentsManager = {
     document.getElementById('modalStudentId').value = '';
     document.getElementById('studentModalTitle').textContent = '새 학생 등록';
     document.getElementById('modalStudentLevel').value = '초등';
-    this.updateModalGradeOptions('초1');
+    this.updateModalGradeOptions('초5');
     modal.classList.add('active');
   },
 
