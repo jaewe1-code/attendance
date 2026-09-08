@@ -6,7 +6,7 @@
 const AttendanceManager = {
   selectedDate: window.getTodayString(),
   levelFilter: 'all', // 'all', '초등', '중등', '고등'
-  gradeFilter: 'all', // 'all', '초5'~'초6', '중1'~'중3', '고1'~'고3'
+  gradeFilter: 'all', // 'all', '초4'~'초6', '중1'~'중3', '고1'~'고3'
   statusFilter: 'all', // 'all', 'studying', 'finished', 'not_attended', 'absent'
   searchKeyword: '',
   timerInterval: null,
@@ -110,13 +110,13 @@ const AttendanceManager = {
 
     let availableGrades = [];
     if (this.levelFilter === '초등') {
-      availableGrades = ['초5', '초6'];
+      availableGrades = ['초4', '초5', '초6'];
     } else if (this.levelFilter === '중등') {
       availableGrades = ['중1', '중2', '중3'];
     } else if (this.levelFilter === '고등') {
       availableGrades = ['고1', '고2', '고3'];
     } else {
-      availableGrades = ['초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
+      availableGrades = ['초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3'];
     }
 
     // 각 학년별 (재실 인원 / 총원) 집계
@@ -193,7 +193,7 @@ const AttendanceManager = {
       students = students.filter(s => s.level === this.levelFilter);
     }
 
-    // 2. 세부 학년 필터 (초5~초6, 중1~중3, 고1~고3)
+    // 2. 세부 학년 필터 (초4~초6, 중1~중3, 고1~고3)
     if (this.gradeFilter !== 'all') {
       students = students.filter(s => s.grade === this.gradeFilter);
     }
