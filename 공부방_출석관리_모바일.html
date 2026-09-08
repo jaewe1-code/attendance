@@ -2821,7 +2821,7 @@ class DataStore {
 
   // --- 학생 CRUD ---
   getStudents() {
-    return [...this.students];
+    return [...this.students].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
   }
 
   getStudentById(id) {
@@ -4049,6 +4049,9 @@ const AttendanceManager = {
       });
     }
 
+    // 가나다 순 정렬
+    students.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+
     if (students.length === 0) {
       const filterName = this.gradeFilter !== 'all' ? `[${this.gradeFilter}] ` : (this.levelFilter !== 'all' ? `[${this.levelFilter}부] ` : '');
       container.innerHTML = `
@@ -4698,6 +4701,9 @@ const StudentsManager = {
         (s.grade && s.grade.toLowerCase().includes(this.searchKeyword))
       );
     }
+
+    // 가나다 순 정렬
+    students.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
 
     // 학생 수 배지 업데이트
     const countBadge = document.getElementById('studentTotalCount');

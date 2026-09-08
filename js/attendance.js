@@ -224,6 +224,9 @@ const AttendanceManager = {
       });
     }
 
+    // 가나다 순 정렬
+    students.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+
     if (students.length === 0) {
       const filterName = this.gradeFilter !== 'all' ? `[${this.gradeFilter}] ` : (this.levelFilter !== 'all' ? `[${this.levelFilter}부] ` : '');
       container.innerHTML = `

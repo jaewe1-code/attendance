@@ -168,6 +168,9 @@ const StudentsManager = {
       );
     }
 
+    // 가나다 순 정렬
+    students.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+
     // 학생 수 배지 업데이트
     const countBadge = document.getElementById('studentTotalCount');
     if (countBadge) countBadge.textContent = `${students.length}명`;

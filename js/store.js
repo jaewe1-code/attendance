@@ -310,7 +310,7 @@ class DataStore {
 
   // --- 학생 CRUD ---
   getStudents() {
-    return [...this.students];
+    return [...this.students].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
   }
 
   getStudentById(id) {
